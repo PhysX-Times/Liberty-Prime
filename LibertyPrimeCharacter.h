@@ -490,7 +490,7 @@ public:
 
 	virtual void Build_Up();
 
-	virtual void MassDamage(float radius, UAttackData* AttackData, FVector TraceLoc, EWeaponType WeaponType);
+	virtual void MassDamage(float radius, UAttackData* AttackData, FVector TraceLoc, EWeaponType WeaponType, AActor* Source = nullptr, bool bPassDMGType = false, EDamageType DMGType_Param = EDamageType::Damage_None);
 	virtual void Damager(FDamageData DamageData, FVector PSLoc);
 	virtual void Damager_Simple(float DMG, FLinearColor Color);
 	virtual void DamageOverTime(float Damage, int Count);

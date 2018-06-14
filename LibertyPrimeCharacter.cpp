@@ -764,7 +764,7 @@ void ALibertyPrimeCharacter::EndRot()
 	restriction = ERestriction::Restriction_Full;
 }
 
-void ALibertyPrimeCharacter::MassDamage(float radius, UAttackData* AttackData, FVector TraceLoc, EWeaponType WeaponType)
+void ALibertyPrimeCharacter::MassDamage(float radius, UAttackData* AttackData, FVector TraceLoc, EWeaponType WeaponType, AActor* Source, bool bPassDMGType, EDamageType DMGType_Param)
 {
 	TArray<FHitResult> HitOuts;
 	FVector TraceStart = TraceLoc;
@@ -813,7 +813,29 @@ void ALibertyPrimeCharacter::MassDamage(float radius, UAttackData* AttackData, F
 
 			if (!IsFound)
 			{
-				IsTarget->Damager(BakeDamageData(this, AttackData, DMGType, WeaponType), IsTarget->GetActorLocation());
+				FDamageData BakedData;
+
+				EDamageType DMGType_Target;
+
+				if (bPassDMGType)
+				{
+					DMGType_Target = DMGType_Param;
+				}
+				else
+				{
+					DMGType_Target = DMGType;
+				}
+
+				if (Source != nullptr)
+				{
+					BakedData = BakeDamageData(Source, AttackData, DMGType_Target, WeaponType);
+				}
+				else
+				{
+					BakedData = BakeDamageData(this, AttackData, DMGType_Target, WeaponType);
+				}
+
+				IsTarget->Damager(BakedData, IsTarget->GetActorLocation());
 				DamagedChars.AddUnique(IsTarget);
 			}
 		}
