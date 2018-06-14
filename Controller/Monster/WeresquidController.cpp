@@ -8,6 +8,7 @@
 #include "BehaviorTree/Blackboard/BlackboardKeyAllTypes.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Monster/Weresquid.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AWeresquidController::AWeresquidController()
 {
@@ -46,7 +47,20 @@ void AWeresquidController::Tick(float DeltaTime)
 
 				if (Distance > MyPawn->AttackDistance && Distance <= MyPawn->AttackDistance_Staff)
 				{
-					MyPawn->Magic_Staff();
+					int rand = UKismetMathLibrary::RandomIntegerInRange(0, 2);
+
+					switch (rand)
+					{
+					case 0:
+						MyPawn->Magic_Staff();
+						break;
+					case 1:
+						MyPawn->Magic_Summon();
+						break;
+					case 2:
+						MyPawn->Magic_Arrow();
+						break;
+					}
 				}
 				else if (Distance <= MyPawn->AttackDistance)
 				{
