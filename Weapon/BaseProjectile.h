@@ -19,6 +19,9 @@ public:
 
 	ABaseProjectile();
 
+	bool bArrow;
+	bool bStopCheck;
+
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 		bool bExplosive;
 	UPROPERTY(EditAnywhere, Category = "CppVariables")

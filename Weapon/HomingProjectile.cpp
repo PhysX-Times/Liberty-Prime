@@ -14,21 +14,29 @@ void AHomingProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (HomingTarget)
+	if (!bStopCheck)
 	{
-		float distance_tar = (GetActorLocation() - HomingTarget->GetActorLocation()).Size();
-
-		if (distance_tar > Distance_Rot && bCanRot)
+		if (HomingTarget)
 		{
-			FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), HomingTarget->GetMesh()->GetComponentLocation() + HomingTarget->Cap_Height / 2.0f);
-			FRotator NewRot = UKismetMathLibrary::RInterpTo(GetActorRotation(), TargetRot, DeltaTime, HomingSpeed_Rot);
-			SetActorRotation(FQuat(NewRot));
+			float distance_tar = (GetActorLocation() - HomingTarget->GetActorLocation()).Size();
+
+			if (distance_tar > Distance_Rot && bCanRot)
+			{
+				FRotator TargetRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), HomingTarget->GetMesh()->GetComponentLocation() + HomingTarget->Cap_Height / 2.0f);
+				FRotator NewRot = UKismetMathLibrary::RInterpTo(GetActorRotation(), TargetRot, DeltaTime, HomingSpeed_Rot);
+				SetActorRotation(FQuat(NewRot));
+			}
+			else
+			{
+				bCanRot = false;
+			}
+
+			SetActorLocation(GetActorForwardVector() * HomingSpeed + GetActorLocation());
 		}
 		else
 		{
-			bCanRot = false;
+			FVector TargetLoc = GetActorForwardVector() * HomingSpeed + GetActorLocation();
+			SetActorLocation(TargetLoc);
 		}
-
-		SetActorLocation(GetActorForwardVector() * HomingSpeed + GetActorLocation());
 	}
 }
