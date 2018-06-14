@@ -268,28 +268,28 @@ void ALibertyPrimeCharacter::Damager(FDamageData DamageData, FVector PSLoc)
 
 		if (DamageData.AttackData->impact != EImpact::Impact_Light)
 		{
-			FTransform HitPSTrans;
-			HitPSTrans.SetLocation(PSLoc);
-			HitPSTrans.SetScale3D(BloodSize_PS);
-			HitPSTrans.SetRotation(FQuat(FRotator(0.0f, 0.0f, 0.0f)));
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitPS, HitPSTrans, true);
-
 			SpawnBloodDecal(DamageData.Source->GetActorLocation(), PSLoc);
+		}
 
-			switch (DamageData.WeaponType)
-			{
-			case EWeaponType::Weapon_Blunt:
-				Play_SoundCue(SoundCue_Hit_Blunt, false);
-				break;
-			case EWeaponType::Weapon_Sharp:
-				Play_SoundCue(SoundCue_Hit_Sharp, false);
-				break;
-			case EWeaponType::Weapon_Claw:
-				Play_SoundCue(SoundCue_Hit_Claw, false);
-				break;
-			default:
-				break;
-			}
+		FTransform HitPSTrans;
+		HitPSTrans.SetLocation(PSLoc);
+		HitPSTrans.SetScale3D(BloodSize_PS);
+		HitPSTrans.SetRotation(FQuat(FRotator(0.0f, 0.0f, 0.0f)));
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitPS, HitPSTrans, true);
+
+		switch (DamageData.WeaponType)
+		{
+		case EWeaponType::Weapon_Blunt:
+			Play_SoundCue(SoundCue_Hit_Blunt, false);
+			break;
+		case EWeaponType::Weapon_Sharp:
+			Play_SoundCue(SoundCue_Hit_Sharp, false);
+			break;
+		case EWeaponType::Weapon_Claw:
+			Play_SoundCue(SoundCue_Hit_Claw, false);
+			break;
+		default:
+			break;
 		}
 
 		if (DamageData.AttackData->impact == EImpact::Impact_Heavy)
