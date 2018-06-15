@@ -12,6 +12,9 @@ ADecorator::ADecorator()
 	RootComponent = RootScene;
 	Decorator_ST = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Decorator_ST"));
 	Decorator_ST->SetupAttachment(RootComponent);
+
+	Decorator_ST->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Decorator_ST->bGenerateOverlapEvents = false;
 }
 
 void ADecorator::BeginPlay()
