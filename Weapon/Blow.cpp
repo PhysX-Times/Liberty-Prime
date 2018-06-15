@@ -17,6 +17,9 @@ ABlow::ABlow()
 	BlowPSPoint = CreateDefaultSubobject<UArrowComponent>(TEXT("BlowPSPoint"));
 	BlowPSPoint->SetupAttachment(RootComponent);
 
+	Senser->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Senser->bGenerateOverlapEvents = false;
+
 	TimeElapsed = 0.0f;
 }
 

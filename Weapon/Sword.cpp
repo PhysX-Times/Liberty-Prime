@@ -28,6 +28,11 @@ ASword::ASword()
 	Weapon_ST = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon_ST"));
 	Weapon_ST->SetupAttachment(RootComponent);
 
+	Senser->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Senser->bGenerateOverlapEvents = false;
+	Weapon_ST->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Weapon_ST->bGenerateOverlapEvents = false;
+
 	DMGType = EDamageType::Damage_None;
 
 	static ConstructorHelpers::FObjectFinder<USoundCue> SoundCue_Fire_Obj(TEXT("SoundCue'/Game/SFX/Fire_Loop_Cue.Fire_Loop_Cue'"));

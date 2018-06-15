@@ -1,9 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "BaseProjectile.h"
+#include "TimerManager.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/ArrowComponent.h"
 #include "Miscellaneous/AttackData.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -18,13 +20,42 @@ ABaseProjectile::ABaseProjectile()
 	RootComponent = RootScene;
 	Senser = CreateDefaultSubobject<UBoxComponent>(TEXT("Senser"));
 	Senser->SetupAttachment(RootComponent);
+	PS_Arrow = CreateDefaultSubobject<UArrowComponent>(TEXT("PS_Arrow"));
+	PS_Arrow->SetupAttachment(RootComponent);
+
+
+	Senser->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	Senser->bGenerateOverlapEvents = false;
 
 	PS_Scale = FVector(1.0f, 1.0f, 1.0f);
+}
+
+void ABaseProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (Trail_PS)
+	{
+		FTransform Trans_PS;
+		Trans_PS.SetLocation(PS_Arrow->GetComponentLocation());
+		Trans_PS.SetRotation(PS_Arrow->GetComponentQuat());
+		Trans_PS.SetScale3D(PS_Arrow->GetComponentScale());
+
+		PS_TrailComp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Trail_PS, Trans_PS);
+	}
+
+	GetWorldTimerManager().SetTimer(DestroyTimer, this, &ABaseProjectile::DestroyFunction, Destroy_Delay, false);
 }
 
 void ABaseProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (PS_TrailComp)
+	{
+		PS_TrailComp->SetWorldLocation(PS_Arrow->GetComponentToWorld().GetLocation());
+		PS_TrailComp->SetWorldRotation(PS_Arrow->GetComponentToWorld().GetRotation());
+	}
 
 	if (!bStopCheck)
 	{
@@ -110,7 +141,7 @@ void ABaseProjectile::Tick(float DeltaTime)
 
 			if (bDestroy_OnHit)
 			{
-				Destroy();
+				DestroyFunction();
 			}
 
 			if (bArrow)
@@ -146,4 +177,14 @@ void ABaseProjectile::Tick(float DeltaTime)
 			}
 		}
 	}
+}
+
+void ABaseProjectile::DestroyFunction()
+{
+	if (PS_TrailComp)
+	{
+		PS_TrailComp->Deactivate();
+	}
+
+	Destroy();
 }
