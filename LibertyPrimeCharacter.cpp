@@ -69,6 +69,13 @@ ALibertyPrimeCharacter::ALibertyPrimeCharacter()
 
 	DeathLine_RefPath = "CurveFloat'/Game/AI/DeathCurve.DeathCurve'";
 	FootstepVolume = 1.0f;
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Destructible, ECollisionResponse::ECR_Ignore);
+	GetCapsuleComponent()->bGenerateOverlapEvents = false;
+
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 }
 
 void ALibertyPrimeCharacter::BeginPlay()
