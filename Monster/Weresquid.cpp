@@ -2,7 +2,6 @@
 
 #include "Weresquid.h"
 #include "TimerManager.h"
-#include "Weapon/Sword.h"
 #include "Weapon/HomingProjectile.h"
 #include "Miscellaneous/AttackData.h"
 #include "Kismet/GameplayStatics.h"
@@ -110,22 +109,17 @@ void AWeresquid::Magic_Summon()
 void AWeresquid::Projectile_Notify()
 {
 	projectile_count = 0;
-	current_yaw = 0;
+	current_yaw = UKismetMathLibrary::RandomIntegerInRange(0, 360);
 
 	SpawnProjectile();
-	Play_SoundCue(SoundCue_Projectile);
-
-	FTransform Trans_PS;
-	Trans_PS.SetLocation(GetMesh()->GetSocketLocation("ProjectileSocket"));
-	Trans_PS.SetRotation(FQuat());
-	Trans_PS.SetScale3D(FVector(1.0f, 1.0f, 1.0f));
-
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Projectile_PS, Trans_PS);
 }
 
 void AWeresquid::Arrow_Notify()
 {
 	arrow_count = 0;
+
+	Sigil_Destory();
+	GetWorldTimerManager().ClearTimer(ArrowTimer);
 
 	FTransform Trans_PS;
 	Trans_PS.SetLocation(GetMesh()->GetSocketLocation("ArrowSocket"));
@@ -144,8 +138,9 @@ void AWeresquid::SpawnProjectile()
 {
 	if (projectile_count < 4)
 	{
-		FTransform SpawnTrans;
+		Play_SoundCue(SoundCue_Projectile);
 
+		FTransform SpawnTrans;
 		SpawnTrans.SetLocation(GetMesh()->GetSocketLocation(FName("ProjectileSocket")));
 		SpawnTrans.SetRotation(FQuat(FRotator(30.0f, current_yaw, 0.0f)));
 		SpawnTrans.SetScale3D(FVector(1.0f, 1.0f, 1.0f));
@@ -199,21 +194,31 @@ void AWeresquid::SpawnArrow()
 
 void AWeresquid::ResetDamager_Add()
 {
+	GetWorld()->GetTimerManager().ClearTimer(MagicTimer);
+}
+
+void AWeresquid::Die_Add()
+{
+	Super::Die_Add();
+
 	GetWorld()->GetTimerManager().ClearTimer(ArrowTimer);
 	Sigil_Destory();
 }
 
 void AWeresquid::Sigil_Destory()
 {
-	FTransform Trans_PS;
+	if (SigilPS_Comp)
+	{
+		FTransform Trans_PS;
 
-	Trans_PS.SetLocation(SigilPS_Comp->GetComponentLocation());
-	Trans_PS.SetRotation(SigilPS_Comp->GetComponentQuat());
-	Trans_PS.SetScale3D(FVector(1.0f, 1.0f, 1.0f));
+		Trans_PS.SetLocation(SigilPS_Comp->GetComponentLocation());
+		Trans_PS.SetRotation(SigilPS_Comp->GetComponentQuat());
+		Trans_PS.SetScale3D(FVector(1.0f, 1.0f, 1.0f));
 
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Sigil_End_PS, Trans_PS);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Sigil_End_PS, Trans_PS);
 
-	SigilPS_Comp->DestroyComponent();
+		SigilPS_Comp->DestroyComponent();
+	}
 }
 
 void AWeresquid::Summon_Notify()
