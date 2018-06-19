@@ -23,7 +23,7 @@ EBTNodeResult::Type UMoveToTarget::ExecuteTask(UBehaviorTreeComponent& OwnerComp
 			
 			if (MyOwner)
 			{
-				AIConRef->MoveToActor(IsTarget, IsTarget->GetCapsuleComponent()->GetScaledCapsuleRadius() + MyOwner->GetCapsuleComponent()->GetScaledCapsuleRadius() + 7.5f);
+				AIConRef->MoveToActor(IsTarget, IsTarget->GetCapsuleComponent()->GetScaledCapsuleRadius() + MyOwner->GetCapsuleComponent()->GetScaledCapsuleRadius() + MyOwner->MoveTo_Distance_Add);
 				MyOwner->Walk_Stop();
 				return EBTNodeResult::Succeeded;
 			}
