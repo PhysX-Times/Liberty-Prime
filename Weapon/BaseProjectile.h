@@ -29,6 +29,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 		float Explosive_radius;
+	UPROPERTY(EditAnywhere, Category = "CppVariables")
+		float Destroy_Delay;
 
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 		FVector PS_Scale;
@@ -40,16 +42,27 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Particles")
 		UParticleSystem* Hit_PS;
+	UPROPERTY(EditAnywhere, Category = "Particles")
+		UParticleSystem* Trail_PS;
 
 	UPROPERTY(EditAnywhere, Category = "SoundCue")
 		USoundCue* Hit_Cue;
 
 	TArray<ALibertyPrimeCharacter*> DamagedChars;
 
+	FTimerHandle DestroyTimer;
+
+	UPROPERTY()
+		UParticleSystemComponent* PS_TrailComp;
 	UPROPERTY()
 		UAttackData* AttackData;
 
+	void DestroyFunction();
+
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+
+	FORCEINLINE class USceneComponent* GetRootScene() { return RootScene; }
 
 private:
 
@@ -57,6 +70,8 @@ private:
 		class USceneComponent* RootScene;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Senser, meta = (AllowPrivateAccess = "true"))
 		class UBoxComponent* Senser;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = PS_Arrow, meta = (AllowPrivateAccess = "true"))
+		class UArrowComponent* PS_Arrow;
 	
 	
 };

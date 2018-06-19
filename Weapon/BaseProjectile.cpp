@@ -57,38 +57,14 @@ void ABaseProjectile::Tick(float DeltaTime)
 		PS_TrailComp->SetWorldRotation(PS_Arrow->GetComponentToWorld().GetRotation());
 	}
 
-	if (!bStopCheck)
+	if (!bStopCheck && MyOwner)
 	{
 		TArray<FHitResult> HitOuts;
 
-		TArray<AActor*> FoundActors;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ALibertyPrimeCharacter::StaticClass(), FoundActors);
-
-		for (auto FoundActor : FoundActors)
-		{
-			ALibertyPrimeCharacter* IsLPC = Cast<ALibertyPrimeCharacter>(FoundActor);
-
-			if (IsLPC)
-			{
-				if (IsLPC->faction != MyOwner->faction)
-				{
-					FoundActors.Remove(IsLPC);
-				}
-			}
-		}
-
-		TArray<AActor*> FoundWeapons;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWeapon::StaticClass(), FoundWeapons);
-
-		FoundActors.Append(FoundWeapons);
-
 		FCollisionQueryParams CollisionQueryParams;
-		CollisionQueryParams.AddIgnoredActors(FoundActors);
 		CollisionQueryParams.bTraceAsyncScene = true;
-		FCollisionResponseParams ResponseParams;
-		ResponseParams.CollisionResponse.Destructible;
 
-		GetWorld()->SweepMultiByChannel(HitOuts, Senser->GetComponentLocation(), Senser->GetComponentLocation() + FVector(0.0f, 0.0f, 5.5f), FQuat(Senser->GetComponentRotation()), ECollisionChannel::ECC_Destructible, FCollisionShape::MakeBox(Senser->GetScaledBoxExtent()), CollisionQueryParams, ResponseParams);
+		GetWorld()->SweepMultiByChannel(HitOuts, Senser->GetComponentLocation(), Senser->GetComponentLocation() + FVector(0.0f, 0.0f, 5.5f), FQuat(Senser->GetComponentRotation()), ECollisionChannel::ECC_Destructible, FCollisionShape::MakeBox(Senser->GetScaledBoxExtent()), CollisionQueryParams);
 
 		for (auto HitOut : HitOuts)
 		{
@@ -96,23 +72,13 @@ void ABaseProjectile::Tick(float DeltaTime)
 			ALibertyPrimeCharacter* Arrow_Target = nullptr;
 
 			FTransform Dest_Trans;
-			Dest_Trans.SetLocation(HitOut.ImpactPoint);
+			Dest_Trans.SetLocation(HitOut.ImpactPoint + HitOut.ImpactNormal * 37.5f);
 			Dest_Trans.SetRotation(FQuat(FRotator(0.0f, 0.0f, 0.0f)));
 			Dest_Trans.SetScale3D(PS_Scale);
 
-			if (Hit_PS)
-			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Hit_PS, Dest_Trans);
-			}
-
-			if (Hit_Cue)
-			{
-				UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Hit_Cue, Dest_Trans.GetLocation());
-			}
-
 			if (!bExplosive)
 			{
-				if (IsLPC && IsLPC != MyOwner && !IsLPC->IsDead && !IsLPC->IsInvincible && MyOwner->faction != IsLPC->faction)
+				if (IsLPC && !IsLPC->IsDead && !IsLPC->IsInvincible && MyOwner->faction != IsLPC->faction)
 				{
 					bool IsDamaged = false;
 
@@ -141,16 +107,32 @@ void ABaseProjectile::Tick(float DeltaTime)
 
 			if (bDestroy_OnHit)
 			{
-				DestroyFunction();
+				if (!IsLPC || IsLPC && IsLPC->faction != MyOwner->faction)
+				{
+					if (Hit_PS)
+					{
+						UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Hit_PS, Dest_Trans);
+					}
+
+					if (Hit_Cue)
+					{
+						UGameplayStatics::SpawnSoundAtLocation(GetWorld(), Hit_Cue, Dest_Trans.GetLocation());
+					}
+
+					DestroyFunction();
+				}
 			}
 
 			if (bArrow)
 			{
-				if (Arrow_Target)
+				if (IsLPC && IsLPC->faction != MyOwner->faction && !IsLPC->IsInvincible)
 				{
 					AttachToComponent(IsLPC->GetMesh(), FAttachmentTransformRules::KeepWorldTransform, HitOut.BoneName);
+
+					bStopCheck = true;
+					break;
 				}
-				else
+				else if (!IsLPC)
 				{
 					AttachToActor(HitOut.GetActor(), FAttachmentTransformRules::KeepWorldTransform);
 
@@ -170,10 +152,10 @@ void ABaseProjectile::Tick(float DeltaTime)
 
 					FRotator NewRot = FRotator(rand_pitch, GetActorRotation().Yaw, GetActorRotation().Roll);
 					SetActorRotation(FQuat(NewRot));
-				}
 
-				bStopCheck = true;
-				break;
+					bStopCheck = true;
+					break;
+				}
 			}
 		}
 	}
