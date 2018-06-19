@@ -15,7 +15,9 @@
 
 AWeresquid::AWeresquid()
 {
+	can_cast = true;
 
+	MoveTo_Distance_Add = 800.0f;
 }
 
 void AWeresquid::BeginPlay()
@@ -31,12 +33,13 @@ void AWeresquid::BeginPlay()
 	SummonAttackData = AttackData_Create(RefPath, SoundCue_Attack, ERestriction::Restriction_Full, EImpact::Impact_Heavy, 2.0f, 2.2f, 1.0f, false);
 
 	RefPath = "AnimMontage'/Game/Enemy/Weresquid/AnimationRM/WERESQUID_CastSpell1_Anim_RM_Montage.WERESQUID_CastSpell1_Anim_RM_Montage'";
-	ArrowAttackData = AttackData_Create(RefPath, SoundCue_Attack, ERestriction::Restriction_Full, EImpact::Impact_Light, 0.25f, 2.2f, 1.0f, false);
-
+	ArrowAttackData = AttackData_Create(RefPath, SoundCue_Magic_Arrow, ERestriction::Restriction_Full, EImpact::Impact_Light, 0.25f, 2.2f, 1.0f, false);
 }
 
 void AWeresquid::Tick(float DeltaTime)
 {
+	Super::Tick(DeltaTime);
+
 	if (Magic_Target && SigilPS_Comp)
 	{
 		FRotator Comp_Rot = UKismetMathLibrary::FindLookAtRotation(SigilPS_Comp->GetComponentLocation(), Magic_Target->GetActorLocation());
@@ -91,11 +94,13 @@ void AWeresquid::Run_EQS_Implementation()
 void AWeresquid::Magic_Staff()
 {
 	Attack(MagicAttackData);
+	Cast_Function(2.0f);
 }
 
 void AWeresquid::Magic_Arrow()
 {
 	Attack(ArrowAttackData);
+	Cast_Function(3.5f);
 }
 
 void AWeresquid::Magic_Summon()
@@ -104,6 +109,8 @@ void AWeresquid::Magic_Summon()
 
 	summon_yaw = UKismetMathLibrary::RandomIntegerInRange(0, 360);
 	summon_count = 0;
+
+	Cast_Function(4.0f);
 }
 
 void AWeresquid::Projectile_Notify()
@@ -138,8 +145,6 @@ void AWeresquid::SpawnProjectile()
 {
 	if (projectile_count < 4)
 	{
-		Play_SoundCue(SoundCue_Projectile);
-
 		FTransform SpawnTrans;
 		SpawnTrans.SetLocation(GetMesh()->GetSocketLocation(FName("ProjectileSocket")));
 		SpawnTrans.SetRotation(FQuat(FRotator(30.0f, current_yaw, 0.0f)));
@@ -151,6 +156,8 @@ void AWeresquid::SpawnProjectile()
 		HomingProjectile->AttackData = MagicAttackData;
 		HomingProjectile->HomingTarget = Magic_Target;
 		UGameplayStatics::FinishSpawningActor(HomingProjectile, SpawnTrans);
+
+		Play_SoundCue(SoundCue_Projectile, false, FName("None"), 1.0f, HomingProjectile->GetRootScene());
 
 		projectile_count += 1;
 		current_yaw += 90;
@@ -169,7 +176,7 @@ void AWeresquid::SpawnArrow()
 		float rand_x = UKismetMathLibrary::RandomFloatInRange(-100.0f, 100.0f);
 		float rand_y = UKismetMathLibrary::RandomFloatInRange(-100.0f, 100.0f);
 		
-		SpawnTrans.SetLocation(SigilPS_Comp->GetComponentLocation() + SigilPS_Comp->GetUpVector() * rand_x + GetActorRightVector() * rand_y);
+		SpawnTrans.SetLocation(SigilPS_Comp->GetComponentLocation() + SigilPS_Comp->GetUpVector() * rand_x + GetActorRightVector() * rand_y + SigilPS_Comp->GetForwardVector() * 175.0f);
 		SpawnTrans.SetRotation(SigilPS_Comp->GetComponentQuat());
 		SpawnTrans.SetScale3D(FVector(1.0f, 1.0f, 1.0f));
 
@@ -179,6 +186,11 @@ void AWeresquid::SpawnArrow()
 		ArrowProjectile->AttackData = ArrowAttackData;
 		ArrowProjectile->bArrow = true;
 		UGameplayStatics::FinishSpawningActor(ArrowProjectile, SpawnTrans);
+
+		if (arrow_count % 4 == 0)
+		{
+			Play_SoundCue(SoundCue_Arrow, false, FName("None"), 1.0f, ArrowProjectile->GetRootScene());
+		}
 
 		arrow_count += 1;
 
@@ -279,4 +291,17 @@ void AWeresquid::SummonFunction()
 			GetWorldTimerManager().SetTimer(SummonTimer, this, &AWeresquid::SummonFunction, 0.2f, false);
 		}
 	}
+}
+
+void AWeresquid::Cast_Reset()
+{
+	can_cast = true;
+}
+
+void AWeresquid::Cast_Function(float cast_delay)
+{
+	can_cast = false;
+
+	GetWorldTimerManager().ClearTimer(CastTimer);
+	GetWorldTimerManager().SetTimer(CastTimer, this, &AWeresquid::Cast_Reset, cast_delay, false);
 }

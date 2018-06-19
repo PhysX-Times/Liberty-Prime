@@ -28,6 +28,8 @@ public:
 	float summon_yaw;
 	int summon_count;
 
+	bool can_cast;
+
 	ALibertyPrimeCharacter* Magic_Target;
 
 	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
@@ -50,8 +52,6 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Particles")
 		UParticleSystem* Teleport_PS;
-	UPROPERTY(Editanywhere, Category = "Particles")
-		UParticleSystem* Projectile_PS;
 
 	UPROPERTY(Editanywhere, Category = "Particles")
 		UParticleSystem* Sigil_PS;
@@ -62,6 +62,10 @@ public:
 		USoundCue* SoundCue_Projectile;
 	UPROPERTY(EditAnywhere, Category = "SoundCues")
 		USoundCue* SoundCue_Teleport;
+	UPROPERTY(EditAnywhere, Category = "SoundCues")
+		USoundCue* SoundCue_Arrow;
+	UPROPERTY(EditAnywhere, Category = "SoundCues")
+		USoundCue* SoundCue_Magic_Arrow;
 
 	UPROPERTY(EditAnywhere, Category = "Montages")
 		UAnimMontage* TeleportMontage;
@@ -79,6 +83,7 @@ public:
 	FTimerHandle MagicTimer;
 	FTimerHandle ArrowTimer;
 	FTimerHandle SummonTimer;
+	FTimerHandle CastTimer;
 
 	 void Magic_Teleport();
 
@@ -110,7 +115,11 @@ public:
 
 	 void Sigil_Destory();
 
+	 void Cast_Reset();
+	 void Cast_Function(float cast_delay);
+
 	 void ResetDamager_Add() override;
+	 void Die_Add() override;
 
    	 virtual void BeginPlay() override;
 	 virtual void Tick(float DeltaTime) override;

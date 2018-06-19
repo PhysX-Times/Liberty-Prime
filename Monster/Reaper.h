@@ -8,6 +8,7 @@
 
 class ASword;
 class UAttackData;
+class AArcherTrail;
 
 UCLASS()
 class LIBERTYPRIME_API AReaper : public AMonster
@@ -18,19 +19,32 @@ public:
 
 	AReaper();
 
+	ALibertyPrimeCharacter* Magic_Target;
+
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 		float AttackDistance_Medium;
 
-	bool bSwitcher;
-	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
-	bool bFuck;
-	bool bCanDuplicate;
+	TArray<FRotator> Earth_Rots;
+	TArray<FVector> Earth_Locs;
+	TArray<bool> Earth_Active;
 
-	int SpawnCount;
+	TArray<AArcherTrail*> Archers;
 
-	AReaper* Reaper_Twin;
+	float earth_distance;
 
-	FVector Spawn_InitialLoc;
+	int archer_count;
+
+	FRotator archer_init_rot;
+
+	UPROPERTY()
+		TArray<UParticleSystemComponent*> Earth_PSComps;
+
+	UPROPERTY(EditAnywhere, Category = "CppVariables")
+		float Earth_Rot_Speed;
+	UPROPERTY(EditAnywhere, Category = "CppVariables")
+		float Earth_Loc_Speed;
+	UPROPERTY(EditAnywhere, Category = "CppVariables")
+		float Earth_Delay;
 
 	UPROPERTY(EditAnywhere, Category = "Montages")
 		UAnimMontage* MagicAttackA_Montage;
@@ -39,11 +53,26 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Sounds")
 		USoundCue* MagicB_Cue;
+	UPROPERTY(EditAnywhere, Category = "SoundCues")
+		USoundCue* SoundCue_Archer;
+	UPROPERTY(EditAnywhere, Category = "SoundCues")
+		USoundCue* SoundCue_Earth_Follow;
+	UPROPERTY(EditAnywhere, Category = "SoundCues")
+		USoundCue* SoundCue_Earth_Explode;
+	UPROPERTY(EditAnywhere, Category = "SoundCues")
+		USoundCue* SoundCue_Earth_Impact;
+
+	UPROPERTY(EditAnywhere, Category = "Particles")
+		UParticleSystem* Earth_Follow_PS;
+	UPROPERTY(EditAnywhere, Category = "Particles")
+		UParticleSystem* Earth_Explosion_PS;
+	UPROPERTY(EditAnywhere, Category = "Particles")
+		UParticleSystem* Earth_Impact_PS;
 
 	UPROPERTY(EditAnywhere, Category = "SubClasses")
 		TSubclassOf<ASword> ScytheDamagerClass;
 	UPROPERTY(EditAnywhere, Category = "SubClasses")
-		TSubclassOf<class AReaper> ReaperClass;
+		TSubclassOf<AArcherTrail> ArcherTrailClass;
 
 	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
 		ASword* ScytheDamager;
@@ -52,38 +81,28 @@ public:
 		UAttackData* MagicAttackData_A;
 	UPROPERTY()
 		UAttackData* MagicAttackData_B;
+	UPROPERTY()
+		UAttackData* ArcherAttackData;
+
+	UPROPERTY()
+		TArray<UAudioComponent*> Earth_Audio_Comps;
 
 	void MagicAttack_A();
 	void MagicAttack_B();
 
-	FTimerHandle GlitchTimer;
-
-	FTimeline GlitchLine;
-
-	void Spawn_Twin();
 	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
-	void Twin_Reset();
+		void Earth_Notify();
 
-	void Glitch();
-	UFUNCTION()
-		void GlitchFunction(float Val);
+	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
+		void Archer_Notify();
 
-	UPROPERTY()
-		UCurveFloat* GlitchCurveFloat;
+	void ArcherFunction();
 
-	void Twin_Play();
+	void Earth_Function();
 
-	virtual void Tick(float DeltaTime) override;
+	FTimerHandle EarthTimer;
+	FTimerHandle ArcherTimer;
+
 	virtual void BeginPlay() override;
-
-
-private:
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ProjectilePoint, meta = (AllowPrivateAccess = "true"))
-		class UArrowComponent* ProjectilePoint_1;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ProjectilePoint, meta = (AllowPrivateAccess = "true"))
-		class UArrowComponent* ProjectilePoint_2;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ProjectilePoint, meta = (AllowPrivateAccess = "true"))
-		class UArrowComponent* ProjectilePoint_3;
 
 };
