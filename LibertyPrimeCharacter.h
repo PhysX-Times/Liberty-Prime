@@ -151,6 +151,7 @@ public:
 	EDamageType DMGType;
 
 	float Cap_Height;
+	float MoveTo_Distance_Add;
 
 	bool bBuildUp;
 	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
@@ -465,7 +466,7 @@ public:
 		void ActiveSensers_Add(ASword* TargetSword);
 
 	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
-		UAudioComponent* Play_SoundCue(USoundCue* TargetSoundCue, bool ClearClustered = false, FName AttachName = FName("None"), float volume = 1.0f);
+		UAudioComponent* Play_SoundCue(USoundCue* TargetSoundCue, bool ClearClustered = false, FName AttachName = FName("None"), float volume = 1.0f, USceneComponent* Attach_Comp = nullptr);
 	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
 		UAudioComponent* Play_SoundCue_Location(USoundCue* TargetSoundCue, FVector TargetLoc, float volume = 1.0f, bool ClearClustered = false);
 

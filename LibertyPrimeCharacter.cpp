@@ -54,6 +54,8 @@ ALibertyPrimeCharacter::ALibertyPrimeCharacter()
 	FreezeAmount = -0.25f;
 	SpeedUpMax = 0.35f;
 
+	MoveTo_Distance_Add = 7.5f;
+
 	BloodSize_Decal = 1.0f;
 	BloodSize_PS = FVector(1.0f, 1.0f, 1.0f);
 	BloodColor = FLinearColor(0.300000, 0.018402, 0.012432, 1.000000);
@@ -893,21 +895,31 @@ void ALibertyPrimeCharacter::RandomAttack()
 	}
 }
 
-UAudioComponent* ALibertyPrimeCharacter::Play_SoundCue(USoundCue* TargetSoundCue, bool ClearClustered, FName AttachName, float volume)
+UAudioComponent* ALibertyPrimeCharacter::Play_SoundCue(USoundCue* TargetSoundCue, bool ClearClustered, FName AttachName, float volume, USceneComponent* Attach_Comp)
 {
 	UE_LOG(LogExec, Warning, TEXT("Play_SoundCue was called."));
 
 	UAudioComponent* AudioComp_Local;
+	USceneComponent* Attach_Comp_Local;
+
+	if (Attach_Comp == nullptr)
+	{
+		Attach_Comp_Local = GetMesh();
+	}
+	else
+	{
+		Attach_Comp_Local = Attach_Comp;
+	}
 
 	if (ClearClustered)
 	{
 		SoundActive_Destroy();
-		SoundComponent_Active = UGameplayStatics::SpawnSoundAttached(TargetSoundCue, GetMesh(), AttachName, FVector(), EAttachLocation::KeepRelativeOffset, false, volume);
+		SoundComponent_Active = UGameplayStatics::SpawnSoundAttached(TargetSoundCue, Attach_Comp_Local, AttachName, FVector(), EAttachLocation::KeepRelativeOffset, false, volume);
 		AudioComp_Local = SoundComponent_Active;
 	}
 	else
 	{
-		AudioComp_Local = UGameplayStatics::SpawnSoundAttached(TargetSoundCue, GetMesh(), AttachName, FVector(), EAttachLocation::KeepRelativeOffset, false, volume);
+		AudioComp_Local = UGameplayStatics::SpawnSoundAttached(TargetSoundCue, Attach_Comp_Local, AttachName, FVector(), EAttachLocation::KeepRelativeOffset, false, volume);
 	}
 
 	return AudioComp_Local;
