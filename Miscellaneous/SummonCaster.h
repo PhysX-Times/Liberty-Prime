@@ -61,7 +61,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = RootScene, meta = (AllowPrivateAccess = "true"))
 		class USceneComponent* RootScene;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Head, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
 		class USkeletalMeshComponent* Mesh;
 	
 };
