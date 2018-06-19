@@ -18,6 +18,9 @@ public:
 
 	AWeresquidController();
 
+	int skill_rand;
+
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	
 };

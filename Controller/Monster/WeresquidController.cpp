@@ -26,6 +26,13 @@ AWeresquidController::AWeresquidController()
 	NormalAttackCurrent = 0;
 }
 
+void AWeresquidController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	skill_rand = UKismetMathLibrary::RandomIntegerInRange(0, 2);
+}
+
 void AWeresquidController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -45,20 +52,21 @@ void AWeresquidController::Tick(float DeltaTime)
 				float Distance = (MyPawn->GetActorLocation() - IsTarget->GetActorLocation()).Size() - MyPawn->GetCapsuleComponent()->GetScaledCapsuleRadius() - IsTarget->GetCapsuleComponent()->GetScaledCapsuleRadius();
 				MyPawn->Magic_Target = IsTarget;
 
-				if (Distance > MyPawn->AttackDistance && Distance <= MyPawn->AttackDistance_Staff)
+				if (Distance > MyPawn->AttackDistance && Distance <= MyPawn->AttackDistance_Staff && MyPawn->can_cast)
 				{
-					int rand = UKismetMathLibrary::RandomIntegerInRange(0, 2);
-
-					switch (rand)
+					switch (skill_rand)
 					{
 					case 0:
 						MyPawn->Magic_Staff();
+						skill_rand += 1;
 						break;
 					case 1:
-						MyPawn->Magic_Summon();
+						MyPawn->Magic_Arrow();
+						skill_rand += 1;
 						break;
 					case 2:
-						MyPawn->Magic_Arrow();
+						MyPawn->Magic_Summon();
+						skill_rand = 0;
 						break;
 					}
 				}

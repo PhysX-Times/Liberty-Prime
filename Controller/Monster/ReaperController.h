@@ -18,6 +18,9 @@ public:
 
 	AReaperController();
 
+	int random_skill;
+
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 		
 };
