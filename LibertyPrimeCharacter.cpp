@@ -1,5 +1,4 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
-
 #include "LibertyPrimeCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -897,9 +896,6 @@ void ALibertyPrimeCharacter::RandomAttack()
 
 UAudioComponent* ALibertyPrimeCharacter::Play_SoundCue(USoundCue* TargetSoundCue, bool ClearClustered, FName AttachName, float volume, USceneComponent* Attach_Comp)
 {
-	UE_LOG(LogExec, Warning, TEXT("Play_SoundCue was called."));
-
-	UAudioComponent* AudioComp_Local;
 	USceneComponent* Attach_Comp_Local;
 
 	if (Attach_Comp == nullptr)
@@ -911,15 +907,18 @@ UAudioComponent* ALibertyPrimeCharacter::Play_SoundCue(USoundCue* TargetSoundCue
 		Attach_Comp_Local = Attach_Comp;
 	}
 
+	UAudioComponent* AudioComp_Local = UGameplayStatics::SpawnSoundAttached(TargetSoundCue, Attach_Comp_Local, AttachName, Attach_Comp_Local->GetComponentLocation(), EAttachLocation::KeepRelativeOffset, false, volume);
+
+	if (TargetSoundCue && AudioComp_Local)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Attach_Comp_Local->GetName());
+		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TargetSoundCue->GetName());
+	}
+
 	if (ClearClustered)
 	{
 		SoundActive_Destroy();
-		SoundComponent_Active = UGameplayStatics::SpawnSoundAttached(TargetSoundCue, Attach_Comp_Local, AttachName, FVector(), EAttachLocation::KeepRelativeOffset, false, volume);
-		AudioComp_Local = SoundComponent_Active;
-	}
-	else
-	{
-		AudioComp_Local = UGameplayStatics::SpawnSoundAttached(TargetSoundCue, Attach_Comp_Local, AttachName, FVector(), EAttachLocation::KeepRelativeOffset, false, volume);
+		SoundComponent_Active = AudioComp_Local;
 	}
 
 	return AudioComp_Local;
@@ -927,19 +926,12 @@ UAudioComponent* ALibertyPrimeCharacter::Play_SoundCue(USoundCue* TargetSoundCue
 
 UAudioComponent* ALibertyPrimeCharacter::Play_SoundCue_Location(USoundCue* TargetSoundCue, FVector TargetLoc, float volume, bool ClearClustered)
 {
-	UE_LOG(LogExec, Warning, TEXT("Play_SoundCue_Location was called."));
-
-	UAudioComponent* AudioComp_Local;
+	UAudioComponent* AudioComp_Local = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), TargetSoundCue, TargetLoc, FRotator::ZeroRotator, volume);
 
 	if (ClearClustered)
 	{
 		SoundActive_Destroy();
-		SoundComponent_Active = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), TargetSoundCue, TargetLoc, FRotator::ZeroRotator, volume);
-		AudioComp_Local = SoundComponent_Active;
-	}
-	else
-	{
-		AudioComp_Local = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), TargetSoundCue, TargetLoc, FRotator::ZeroRotator, volume);
+		SoundComponent_Active = AudioComp_Local;
 	}
 
 	return AudioComp_Local;
