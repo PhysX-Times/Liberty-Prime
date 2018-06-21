@@ -18,6 +18,9 @@ public:
 
 	ASkeletonSorcererController();
 
+	int rand_skill;
+
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	
 };

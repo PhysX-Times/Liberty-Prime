@@ -12,18 +12,21 @@
 
 ASkeletonSorcererController::ASkeletonSorcererController()
 {
-	MediumRangeAttackMax = 3;
-	MediumRangeAttackMin = 1;
-	MediumRangeAttackTarget = 0;
-	MediumRangeAttackCurrent = 0;
-	CloseRangeAttackMax = 3;
-	CloseRangeAttackMin = 1;
+	CloseRangeAttackMax = 2;
+	CloseRangeAttackMin = 0;
 	CloseRangeAttackTarget = 0;
 	CloseRangeAttackCurrent = 0;
-	NormalAttackMax = 3;
-	NormalAttackMin = 1;
+	NormalAttackMax = 2;
+	NormalAttackMin = 0;
 	NormalAttackTarget = 0;
 	NormalAttackCurrent = 0;
+}
+
+void ASkeletonSorcererController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	rand_skill = UKismetMathLibrary::RandomIntegerInRange(0, 2);
 }
 
 void ASkeletonSorcererController::Tick(float DeltaTime)
@@ -45,31 +48,37 @@ void ASkeletonSorcererController::Tick(float DeltaTime)
 				float Distance = (MyPawn->GetActorLocation() - IsTarget->GetActorLocation()).Size() - MyPawn->GetCapsuleComponent()->GetScaledCapsuleRadius() - IsTarget->GetCapsuleComponent()->GetScaledCapsuleRadius();
 				MyPawn->Magic_Target = IsTarget;
 
-				if (Distance > MyPawn->AttackDistance && Distance <= MyPawn->AttackDistance_Magic)
+				if (Distance > MyPawn->AttackDistance && Distance <= MyPawn->AttackDistance_Magic && MyPawn->can_cast)
 				{
-					MyPawn->Magic_Arrow();
-					
-					/*
-					int rand = UKismetMathLibrary::RandomIntegerInRange(0, 2);
-
-					switch (rand)
+					switch (rand_skill)
 					{
 					case 0:
 						MyPawn->Magic_Staff();
+						rand_skill = 1;
 						break;
 					case 1:
-						MyPawn->Magic_Summon();
+						MyPawn->Magic_Arrow();
+						rand_skill = 2;
 						break;
 					case 2:
-						MyPawn->Magic_Arrow();
+						MyPawn->Magic_Shell();
+						rand_skill = 0;
 						break;
 					}
-					*/
 				}
 				else if (Distance <= MyPawn->AttackDistance)
 				{
-					MyPawn->Magic_Target = IsTarget;
-					MyPawn->Magic_Teleport();
+					if (CloseRangeAttackCurrent < CloseRangeAttackTarget)
+					{
+						MyPawn->Magic_Target = IsTarget;
+						MyPawn->Magic_Teleport();
+						CloseRangeAttackCurrent += 1;
+					}
+					else
+					{
+						MyPawn->RandomAttack();
+						NormalAttackCurrent += 1;
+					}
 				}
 			}
 		}
