@@ -13,10 +13,16 @@
 #include "Weapon/Projectile.h"
 #include "Miscellaneous/TrailMesh.h"
 #include "Miscellaneous/SummonCaster.h"
+#include "Miscellaneous/IndicatorDecal.h"
+#include "Miscellaneous/ArcherTrail.h"
+#include "Miscellaneous/HellShell.h"
+#include "DrawDebugHelpers.h"
+#include "Engine.h"
 
 ASkeletonSorcerer::ASkeletonSorcerer()
 {
-
+	can_cast = true;
+	MoveTo_Distance_Add = 875.0f;
 }
 
 void ASkeletonSorcerer::BeginPlay()
@@ -25,11 +31,19 @@ void ASkeletonSorcerer::BeginPlay()
 
 	FString RefPath;
 
+	TeleportAttackData = AttackData_Create(SoundCue_Teleport, EImpact::Impact_Heavy, 1.5f);
+
 	RefPath = "AnimMontage'/Game/Enemy/SkeletonSorcerer/AnimationRM/SkeletonSorcerer_MagicShot_RM_Montage.SkeletonSorcerer_MagicShot_RM_Montage'";
 	MagicAttackData = AttackData_Create(RefPath, SoundCue_Attack, ERestriction::Restriction_Full, EImpact::Impact_Normal, 1.0f, 2.2f, 1.0f, false);
 
 	RefPath = "AnimMontage'/Game/Enemy/SkeletonSorcerer/AnimationRM/SkeletonSorcerer_LightSpell_RM_Montage.SkeletonSorcerer_LightSpell_RM_Montage'";
 	ArrowAttackData = AttackData_Create(RefPath, SoundCue_Attack, ERestriction::Restriction_Full, EImpact::Impact_Light, 0.25f, 2.2f, 1.0f, false);
+
+	RefPath = "AnimMontage'/Game/Enemy/SkeletonSorcerer/AnimationRM/SkeletonSorcerer_SpellB_RM_Montage.SkeletonSorcerer_SpellB_RM_Montage'";
+	HellAttackData = AttackData_Create(RefPath, SoundCue_HellShell, ERestriction::Restriction_Full, EImpact::Impact_Light, 0.25f, 2.2f, 1.0f, false);
+
+	RefPath = "AnimMontage'/Game/Enemy/SkeletonSorcerer/AnimationRM/SkeletonSorcerer_Swing_RM_Montage.SkeletonSorcerer_Swing_RM_Montage'";
+	RandomAttackData_Create(RefPath, SoundCue_Melee, ERestriction::Restriction_Full, EImpact::Impact_Normal, 1.0f, 2.2f, 1.0f, false);
 
 	FTransform SpawnTrans;
 	SpawnTrans.SetLocation(GetActorLocation());
@@ -46,14 +60,41 @@ void ASkeletonSorcerer::BeginPlay()
 	StaffDamager->ApplyEffect(EDamageType::Damage_Fire, true);
 }
 
+void ASkeletonSorcerer::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
 void ASkeletonSorcerer::Magic_Staff()
 {
 	Attack(MagicAttackData);
+	Cast_Function(2.5f);
 }
 
 void ASkeletonSorcerer::Magic_Arrow()
 {
 	Attack(ArrowAttackData);
+	Cast_Function(4.5f);
+}
+
+void ASkeletonSorcerer::Magic_Shell()
+{
+	Attack(HellAttackData);
+	Cast_Function(5.5f);
+}
+
+void ASkeletonSorcerer::HellShell_Notify()
+{
+	FTransform SpawnTrans;
+	SpawnTrans.SetLocation(Magic_Target->GetActorLocation());
+	SpawnTrans.SetRotation(FQuat(FRotator(0.0f, 0.0f, 0.0f)));
+	SpawnTrans.SetScale3D(FVector(1.0f, 1.0f, 1.0f));
+
+	AHellShell* HellShell = GetWorld()->SpawnActorDeferred<AHellShell>(HellShellClass, SpawnTrans, this, Instigator);
+	HellShell->MyOwner = this;
+	HellShell->HellAttackData = HellAttackData;
+	UGameplayStatics::FinishSpawningActor(HellShell, SpawnTrans);
 }
 
 void ASkeletonSorcerer::Projectile_Notify()
@@ -103,6 +144,8 @@ void ASkeletonSorcerer::Arrow_Notify()
 	arrow_current_loc = Magic_Target->GetActorLocation();
 	SigilPS_Comp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Sigil_PS, Trans_PS);
 
+	Play_SoundCue_Location(SoundCue_Attack, Trans_PS.GetLocation());
+
 	SpawnUpArrow();
 	GetWorldTimerManager().ClearTimer(ArrowTimer);
 	GetWorldTimerManager().SetTimer(ArrowTimer, this, &ASkeletonSorcerer::SpawnDownArrow, 1.25f, false);
@@ -132,6 +175,11 @@ void ASkeletonSorcerer::SpawnUpArrow()
 		ArrowProjectile->bArrow = true;
 		ArrowProjectile->Destroy_Delay = 1.5f;
 		UGameplayStatics::FinishSpawningActor(ArrowProjectile, SpawnTrans);
+
+		if (arrow_count_up % 4 == 0)
+		{
+			Play_SoundCue(SoundCue_Arrow, false, FName("None"), 1.0f, ArrowProjectile->GetRootScene());
+		}
 
 		arrow_count_up += 1;
 
@@ -163,8 +211,13 @@ void ASkeletonSorcerer::SpawnDownArrow()
 		ArrowProjectile->DMGType = EDamageType::Damage_Fire;
 		ArrowProjectile->AttackData = ArrowAttackData;
 		ArrowProjectile->bArrow = true;
-		ArrowProjectile->Destroy_Delay = 7.5f;
+		ArrowProjectile->Destroy_Delay = 6.0f;
 		UGameplayStatics::FinishSpawningActor(ArrowProjectile, SpawnTrans);
+
+		if (arrow_count_down % 4 == 0)
+		{
+			Play_SoundCue(SoundCue_Arrow, false, FName("None"), 1.0f, ArrowProjectile->GetRootScene());
+		}
 
 		arrow_count_down += 1;
 
@@ -239,10 +292,22 @@ void ASkeletonSorcerer::Teleport_Apply()
 		Trail_Trans.SetRotation(FQuat(GetActorRotation()));
 		Trail_Trans.SetScale3D(FVector(1.0f, 1.0f, 1.0f));
 
-		ATrailMesh* TrailMesh = GetWorld()->SpawnActorDeferred<ATrailMesh>(TrailMeshClass, Trail_Trans, this, Instigator);
-		UGameplayStatics::FinishSpawningActor(TrailMesh, Trail_Trans);
+		ASummonCaster* SummonCaster = GetWorld()->SpawnActorDeferred<ASummonCaster>(SummonCasterClass, Trail_Trans, this, Instigator);
+		SummonCaster->MyOwner = this;
+		SummonCaster->AttackData = TeleportAttackData;
+		UGameplayStatics::FinishSpawningActor(SummonCaster, Trail_Trans);
+
+		/*
+
+		DMGType = EDamageType::Damage_Fire;
+		MassDamage(200.0f, TeleportAttackData, Trail_Trans.GetLocation(), EWeaponType::Weapon_Sharp);
+		DrawDebugSphere(GetWorld(), Trail_Trans.GetLocation(), 200.0f, 10, FColor::Red, false, 2.5f, 0, 2.5f);
+
+		Trail_Trans.SetLocation(Trail_Trans.GetLocation() + FVector(0.0f, 0.0f, 5.5f));
 
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Teleport_PS, Trail_Trans);
+		*/
+
 		Play_SoundCue_Location(SoundCue_Teleport, Trail_Trans.GetLocation());
 
 		FRotator Magic_Rot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), Magic_Target->GetActorLocation());
@@ -250,6 +315,19 @@ void ASkeletonSorcerer::Teleport_Apply()
 
 		SetActorLocation(HitOut.ImpactPoint + FVector(0.0f, 0.0f, Cap_Height));
 	}
+}
+
+void ASkeletonSorcerer::Cast_Reset()
+{
+	can_cast = true;
+}
+
+void ASkeletonSorcerer::Cast_Function(float cast_delay)
+{
+	can_cast = false;
+
+	GetWorldTimerManager().ClearTimer(CastTimer);
+	GetWorldTimerManager().SetTimer(CastTimer, this, &ASkeletonSorcerer::Cast_Reset, cast_delay, false);
 }
 
 void ASkeletonSorcerer::Run_EQS_Implementation()
