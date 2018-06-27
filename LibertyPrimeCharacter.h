@@ -503,4 +503,5 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
 		virtual void ResetMontage();
 	virtual void ResetMontage_Add();
+	virtual void PlayMontage_Add();
 };

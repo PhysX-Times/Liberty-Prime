@@ -77,6 +77,7 @@ ALibertyPrimeCharacter::ALibertyPrimeCharacter()
 	GetCapsuleComponent()->bGenerateOverlapEvents = false;
 
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 90.0f, 0.0f);
 }
 
 void ALibertyPrimeCharacter::BeginPlay()
@@ -566,6 +567,12 @@ void ALibertyPrimeCharacter::PlayMontage(UAnimMontage* TargetMontage, float Play
 	RotLerpSpeed = TargetRotSpeed;
 	this->restriction = restriction;
 	EndFly();
+	PlayMontage_Add();
+}
+
+void ALibertyPrimeCharacter::PlayMontage_Add()
+{
+
 }
 
 void ALibertyPrimeCharacter::ResetMontage()
@@ -601,8 +608,6 @@ void ALibertyPrimeCharacter::ResetDamager(ASword* TargetSenser)
 
 void ALibertyPrimeCharacter::ResetDamager()
 {
-	ResetDamager_Add();
-
 	bFocus = false;
 
 	for (auto ActiveSenser : ActiveSensers)
@@ -615,6 +620,7 @@ void ALibertyPrimeCharacter::ResetDamager()
 	}
 
 	ActiveSensers.Empty();
+	ResetDamager_Add();
 }
 
 void ALibertyPrimeCharacter::ResetDamager_Add()
@@ -907,13 +913,7 @@ UAudioComponent* ALibertyPrimeCharacter::Play_SoundCue(USoundCue* TargetSoundCue
 		Attach_Comp_Local = Attach_Comp;
 	}
 
-	UAudioComponent* AudioComp_Local = UGameplayStatics::SpawnSoundAttached(TargetSoundCue, Attach_Comp_Local, AttachName, Attach_Comp_Local->GetComponentLocation(), EAttachLocation::KeepRelativeOffset, false, volume);
-
-	if (TargetSoundCue && AudioComp_Local)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, Attach_Comp_Local->GetName());
-		GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, TargetSoundCue->GetName());
-	}
+	UAudioComponent* AudioComp_Local = UGameplayStatics::SpawnSoundAttached(TargetSoundCue, Attach_Comp_Local, AttachName, Attach_Comp_Local->GetComponentToWorld().GetLocation(), EAttachLocation::KeepWorldPosition, false, volume);
 
 	if (ClearClustered)
 	{
