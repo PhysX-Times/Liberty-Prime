@@ -29,8 +29,33 @@ public:
 	APlayerChar();
 
 	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		float MaxHealth_Item;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		float MaxWillPower_Item;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		float DMG_Item;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		float PhysicalResist_Item;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		float FireDMG_Item;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		float FireResist_Item;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		float LightningDMG_Item;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		float LightningResist_Item;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		float PoisonDMG_Item;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		float PoisonResist_Item;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		float Frostbite_Item;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		float FrostbiteResist_Item;
+
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
 	float credit;
-	UPROPERTY(EditAnywhere, Category = "CppVariables")
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
 	TArray<int32> slot_stages;
 
 	float TargetZoom;
@@ -71,7 +96,13 @@ public:
 		TArray<UAttackData*> CounterDatas;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Inventory")
+		TArray<int> InventoryCounts;
+
+	
+	UPROPERTY(BlueprintReadWrite, Category = "Inventory")
 		TArray<UItem*> InventoryItems;
+	UPROPERTY(BlueprintReadWrite, Category = "Inventory")
+		TArray<UItem*> SlotItems;
 
 	UPROPERTY(EditAnywhere, Category = "Montages")
 		UAnimMontage* DodgeFrontMontage;
@@ -119,6 +150,26 @@ public:
 
 	void ChangeWidget(UUserWidget* NewWidget, bool remove);
 
+	void Add_Item(UItem* Item);
+	void Remove_Item(int item_index);
+
+	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
+		void Equip_Item(int item_index, int slot_index);
+	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
+		void Equip_Swap_Item(int item_index, int slot_index);
+	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
+		void UnEquip_Item(int slot_index);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
+		void Add_Child_Item(UItem* TargetItem, int target_index);
+		void Add_Child_Item_Implementation(UItem* TargetItem, int target_index);
+	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
+		void Swap_Child_Item(int first_index, int second_index, int count);
+		void Swap_Child_Item_Implementation(int first_index, int second_index, int count);
+	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
+		void Remove_Child_Item(int item_index, int count);
+		void Remove_Child_Item_Implementation(int item_index, int count);
+
 	UFUNCTION()
 	void CounterFunction(float Value);
 
@@ -131,6 +182,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
 	void Widget_Load();
 	void Widget_Load_Implementation();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
+	void Inventory_Items_Load();
+	void Inventory_Items_Load_Implementation();
 
 	// Called every frame.
 	virtual void Tick(float DeltaSeconds) override;

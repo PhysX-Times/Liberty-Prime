@@ -22,6 +22,9 @@
 #include "Save/PlayerSave.h"
 #include "Engine.h"
 #include "Miscellaneous/Items/Inferno.h"
+#include "Miscellaneous/Items/CernunnosBlessing.h"
+#include "Miscellaneous/Items/VenomBlade.h"
+#include "Miscellaneous/Items/VenomSerpent.h"
 
 APlayerChar::APlayerChar()
 {
@@ -69,6 +72,9 @@ APlayerChar::APlayerChar()
 	HitDatas.Add(FMontageData(HitMontageObj1.Object, 1.35f));
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> HitMontageObj2(TEXT("/Game/ModularKnight/Animations/DynamicSwordAnimset/Animations/InPlace/HitMontage02"));
 	HitDatas.Add(FMontageData(HitMontageObj2.Object, 1.35f));
+
+	slot_stages.Init(0, 9);
+	SlotItems.Init(nullptr, 9);
 }
 
 void APlayerChar::SetupPlayerInputComponent(class UInputComponent* InputComponent)
@@ -195,8 +201,19 @@ void APlayerChar::BeginPlay()
 		BodyPart_SK->SetRenderCustomDepth(true);
 	}
 
-	//UItem* Item_Inst = NewObject<UItem>(this, UInferno::StaticClass());
-	//InventoryItems.Add(Item_Inst);
+	slot_stages = { 3, 3, 3, 2, 2, 1, 1, 0, 0 };
+
+	InventoryWidget = CreateWidget<UUserWidget>(GetWorld(), InventoryWidget_Class);
+	PlayerWidget = CreateWidget<UUserWidget>(GetWorld(), PlayerWidget_Class);
+	FInputModeGameAndUI inputMode;
+	inputMode.SetHideCursorDuringCapture(false);
+	inputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetInputMode(inputMode);
+	GEngine->GameViewport->Viewport->LockMouseToViewport(true);
+	ChangeWidget(PlayerWidget, false);
+
+	Widget_Load();
+	Inventory_Items_Load();
 
 	for (auto InventoryItem : InventoryItems)
 	{
@@ -204,6 +221,46 @@ void APlayerChar::BeginPlay()
 		InventoryItem->Apply_Effect();
 	}
 
+	TArray<TSubclassOf<UItem>> ItemClasses;
+
+	for (TObjectIterator<UClass> It; It; ++It)
+	{
+		if (It->IsChildOf(UItem::StaticClass()) && !It->HasAnyClassFlags(CLASS_Abstract) && *It != UItem::StaticClass())
+		{
+			ItemClasses.Add(*It);
+		}
+	}
+
+	InventoryItems.Empty();
+
+	for (auto ItemClass : ItemClasses)
+	{
+		UItem* Item_Inst = NewObject<UItem>(this, ItemClass);
+		Item_Inst->MyOwner = this;
+		Add_Item(Item_Inst);
+	}
+
+	UItem* Item_Inst = NewObject<UItem>(this, UCernunnosBlessing::StaticClass());
+	Item_Inst->MyOwner = this;
+	Add_Item(Item_Inst);
+
+	Item_Inst = NewObject<UItem>(this, UInferno::StaticClass());
+	Item_Inst->MyOwner = this;
+	Add_Item(Item_Inst);
+
+	Item_Inst = NewObject<UItem>(this, UVenomSerpent::StaticClass());
+	Item_Inst->MyOwner = this;
+	Add_Item(Item_Inst);
+
+	Item_Inst = NewObject<UItem>(this, UInferno::StaticClass());
+	Item_Inst->MyOwner = this;
+	Add_Item(Item_Inst);
+
+	Item_Inst = NewObject<UItem>(this, UVenomSerpent::StaticClass());
+	Item_Inst->MyOwner = this;
+	Add_Item(Item_Inst);
+
+	/*
 	UPlayerSave* PlayerSave_Inst = Cast<UPlayerSave>(UGameplayStatics::CreateSaveGameObject(UPlayerSave::StaticClass()));
 	PlayerSave_Inst = Cast<UPlayerSave>(UGameplayStatics::LoadGameFromSlot(PlayerSave_Inst->SaveSlotName, PlayerSave_Inst->UserIndex));
 
@@ -216,16 +273,121 @@ void APlayerChar::BeginPlay()
 	}
 
 	slot_stages = PlayerSave_Inst->slot_stages;
+	*/
+}
 
-	InventoryWidget = CreateWidget<UUserWidget>(GetWorld(), InventoryWidget_Class);
-	PlayerWidget = CreateWidget<UUserWidget>(GetWorld(), PlayerWidget_Class);
-	FInputModeGameAndUI inputMode;
-	inputMode.SetHideCursorDuringCapture(false);
-	UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetInputMode(inputMode);
-	GEngine->GameViewport->Viewport->LockMouseToViewport(true);
-	ChangeWidget(PlayerWidget, false);
+void APlayerChar::Equip_Item(int item_index, int slot_index)
+{
+	SlotItems[slot_index] = InventoryItems[item_index];
+	InventoryItems[item_index]->Apply_Effect();
+	Remove_Item(item_index);
+}
 
-	Widget_Load();
+void APlayerChar::UnEquip_Item(int slot_index)
+{
+	Add_Item(SlotItems[slot_index]);
+	SlotItems[slot_index]->Reverse_Effect();
+	SlotItems[slot_index] = nullptr;
+}
+
+void APlayerChar::Equip_Swap_Item(int item_index, int slot_index)
+{
+	UItem* Item_Local = SlotItems[slot_index];
+	SlotItems[slot_index]->Reverse_Effect();
+
+	Equip_Item(item_index, slot_index);
+	Add_Item(Item_Local);
+}
+
+void APlayerChar::Remove_Item(int item_index)
+{
+	if (InventoryCounts[item_index] > 1)
+	{
+		InventoryCounts[item_index] -= 1;
+		Remove_Child_Item(item_index, InventoryCounts[item_index]);
+	}
+	else
+	{
+		InventoryItems.RemoveAt(item_index);
+		InventoryCounts.RemoveAt(item_index);
+		Remove_Child_Item(item_index, 0);
+	}
+}
+
+void APlayerChar::Add_Item(UItem* Item)
+{
+	int target_index = 0;
+
+	bool bFoundMatch = false;
+
+	int fixed_size = InventoryItems.Num();
+
+	if (fixed_size != 0)
+	{
+		for (int i = 0; i < fixed_size; i++)
+		{
+			if (InventoryItems[i]->Item_Tier == Item->Item_Tier && !bFoundMatch)
+			{
+				target_index = i;
+				bFoundMatch = true;
+			}
+
+			if (Item->Item_Name.Equals(InventoryItems[i]->Item_Name))
+			{
+				InventoryCounts[i] += 1;
+				int target_count = InventoryCounts[i];
+
+				for (int j = i; j > target_index; j--)
+				{
+					InventoryItems[j] = InventoryItems[j - 1];
+					InventoryCounts[j] = InventoryCounts[j - 1];
+				}
+
+				InventoryItems[target_index] = Item;
+				InventoryCounts[target_index] =  target_count;
+
+				Swap_Child_Item(i, target_index, target_count);
+				break;
+			}
+			else if (Item->Item_Tier > InventoryItems[i]->Item_Tier)
+			{
+				if (bFoundMatch)
+				{
+					InventoryItems.Insert(Item, target_index);
+					InventoryCounts.Insert(1, target_index);
+					Add_Child_Item(Item, target_index);
+				}
+				else
+				{
+					InventoryItems.Insert(Item, i);
+					InventoryCounts.Insert(1, i);
+					Add_Child_Item(Item, i);
+				}
+				break;
+			}
+			else if (i == (fixed_size - 1))
+			{
+				if (bFoundMatch)
+				{
+					InventoryItems.Insert(Item, target_index);
+					InventoryCounts.Insert(1, target_index);
+					Add_Child_Item(Item, target_index);
+				}
+				else
+				{
+					InventoryItems.Add(Item);
+					InventoryCounts.Add(1);
+					Add_Child_Item(Item, i + 1);
+				}
+			}
+		}
+	}
+	else
+	{
+		InventoryItems.Add(Item);
+		InventoryCounts.Add(1);
+		Add_Child_Item(Item, 0);
+	}
 }
 
 void APlayerChar::Save()
@@ -573,6 +735,26 @@ void APlayerChar::ChangeWidget(UUserWidget* NewWidget, bool remove)
 }
 
 void APlayerChar::Widget_Load_Implementation()
+{
+
+}
+
+void APlayerChar::Inventory_Items_Load_Implementation()
+{
+
+}
+
+void APlayerChar::Add_Child_Item_Implementation(UItem* TargetItem, int target_index)
+{
+
+}
+
+void APlayerChar::Swap_Child_Item_Implementation(int first_index, int second_index, int count)
+{
+
+}
+
+void APlayerChar::Remove_Child_Item_Implementation(int item_index, int count)
 {
 
 }
