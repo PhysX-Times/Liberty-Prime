@@ -179,22 +179,29 @@ public:
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 	bool CanPlayFootstep;
 
+	UPROPERTY(EditAnywhere, Category = "CppVariables")
+		float AgroCheckRadius;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 	float MaxHealth;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 	float Health;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
+		float MaxWillPower;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
+		float WillPower;
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 	float FootstepVolume;
 	float RotLerpSpeed;
 	float RotLerpSpeedNormal;
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 	float Weight;
-	UPROPERTY(EditAnywhere, Category = "CppVariables")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 	float DMG;
 	float DMGOverTime;
 	float DMGOverTime_Poison;
 	float DMGOverTime_Fire;
-	UPROPERTY(EditAnywhere, Category = "CppVariables")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 	float FreezeAmount;
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 	float FreezeDuration;
@@ -205,11 +212,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 	float SpeedUpMax;
 	float ElementalInterval;
-	UPROPERTY(EditAnywhere, Category = "CppVariables")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 	float FireDMG;
-	UPROPERTY(EditAnywhere, Category = "CppVariables")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 	float PoisonDMG;
-	UPROPERTY(EditAnywhere, Category = "CppVariables")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 	float LightningDMG;
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 	float WalkSpeed;
@@ -225,15 +232,15 @@ public:
 	float FootStepInterval;
 
 
-	UPROPERTY(EditAnywhere, Category = "CppVariables")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 		float FreezeResist_Frostbite;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 		float FireResist_DMG;
-	UPROPERTY(EditAnywhere, Category = "CppVariables")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 		float PoisonResist_DMG;
-	UPROPERTY(EditAnywhere, Category = "CppVariables")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 		float PhysicalResist_DMG;
-	UPROPERTY(EditAnywhere, Category = "CppVariables")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 		float LightningResist_DMG;
 
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
@@ -454,10 +461,12 @@ public:
 	void Light_SpeedUp();
 	void Light_SpeedDown();
 
-	void Freeze(int Count, float Multiplier);
+	void Freeze(float Multiplier);
 	void FreezeReset();
 
 	void CheckDilation();
+
+	float Calculate_Effect(float effect_val, float resist_val);
 
 	UFUNCTION(BlueprintNativeEvent, Category = "CppFunctions")
 		void UpdateHealth_PB();
@@ -469,6 +478,8 @@ public:
 		UAudioComponent* Play_SoundCue(USoundCue* TargetSoundCue, bool ClearClustered = false, FName AttachName = FName("None"), float volume = 1.0f, USceneComponent* Attach_Comp = nullptr);
 	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
 		UAudioComponent* Play_SoundCue_Location(USoundCue* TargetSoundCue, FVector TargetLoc, float volume = 1.0f, bool ClearClustered = false);
+	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
+		UAudioComponent* Play_SoundCue_2D(USoundCue* TargetSoundCue, float volume = 1.0f);
 
 	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
 		void Play_FootStep();

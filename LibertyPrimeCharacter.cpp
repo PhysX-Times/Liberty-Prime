@@ -38,19 +38,18 @@ ALibertyPrimeCharacter::ALibertyPrimeCharacter()
 	restriction = ERestriction::Restriction_None;
 	DMGType = EDamageType::Damage_None;
 	ElementalInterval = 0.5f;
-	PhysicalResist_DMG = 1.0f;
-	PoisonResist_DMG = 1.0f;
-	FireResist_DMG = 1.0f;
-	PoisonResist_DMG = 1.0f;
-	FreezeResist_Frostbite = 1.0f;
+	PhysicalResist_DMG = 5.0f;
+	PoisonResist_DMG = 0.1f;
+	FireResist_DMG = 2.0f;
+	FreezeResist_Frostbite = 0.05f;
 	FreezeDuration = 5.0f;
-	LightningResist_DMG = 1.0f;
+	LightningResist_DMG = 4.0f;
 
 	FireTick = 4;
 	PoisonTick = 60;
 
 	SpeedUpAmount = 0.05f;
-	FreezeAmount = -0.25f;
+	FreezeAmount = 0.25f;
 	SpeedUpMax = 0.35f;
 
 	MoveTo_Distance_Add = 7.5f;
@@ -78,6 +77,8 @@ ALibertyPrimeCharacter::ALibertyPrimeCharacter()
 
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 90.0f, 0.0f);
+
+	AgroCheckRadius = 1500.0f;
 }
 
 void ALibertyPrimeCharacter::BeginPlay()
@@ -229,7 +230,8 @@ void ALibertyPrimeCharacter::Damager(FDamageData DamageData, FVector PSLoc)
 {
 	if (!IsDead)
 	{
-		float TargetDMG = DamageData.Applier->DMG * DamageData.AttackData->DMGMultiplier * PhysicalResist_DMG;
+		float dmg_multiplied = DamageData.Applier->DMG * DamageData.AttackData->DMGMultiplier;
+		float TargetDMG = Calculate_Effect(dmg_multiplied, PhysicalResist_DMG);
 
 		if (TargetDMG != 0.0f && PlayerController)
 		{
@@ -243,7 +245,7 @@ void ALibertyPrimeCharacter::Damager(FDamageData DamageData, FVector PSLoc)
 
 		if (DamageData.DMGType == EDamageType::Damage_Fire)
 		{
-			float FireDMG_Local = DamageData.Applier->FireDMG * DamageData.Applier->FireTick * FireResist_DMG;
+			float FireDMG_Local = Calculate_Effect(DamageData.Applier->FireDMG / 2.0f, FireResist_DMG / 2.0f);
 			TargetDMG += FireDMG_Local;
 
 			if (PlayerController)
@@ -253,18 +255,15 @@ void ALibertyPrimeCharacter::Damager(FDamageData DamageData, FVector PSLoc)
 		}
 		else if (DamageData.DMGType == EDamageType::Damage_Lightning)
 		{
-			float LightningDMG_Local = DamageData.Applier->LightningDMG * LightningResist_DMG;
-			DamageData.Applier->Damager_Simple(DamageData.Applier->LightningDMG * DamageData.Applier->LightningResist_DMG / 100.0f * 15.0f, LightningColor);
+			float LightningDMG_Local = Calculate_Effect(DamageData.Applier->LightningDMG, LightningResist_DMG);
+
+			DamageData.Applier->Damager_Simple(LightningDMG_Local / 100.0f * 15.0f, LightningColor);
 			TargetDMG += LightningDMG_Local;
 
 			if (PlayerController)
 			{
 				PlayerController->Add_Indicator(LightningDMG_Local, LightningColor, PSLoc + FVector(0.0f, 0.0f, 47.5f));
 			}
-		}
-		else
-		{
-			TargetDMG = DamageData.Applier->DMG * DamageData.AttackData->DMGMultiplier * PhysicalResist_DMG;
 		}
 
 		Health = UKismetMathLibrary::FClamp(Health - TargetDMG, 0.0f, MaxHealth);
@@ -608,8 +607,6 @@ void ALibertyPrimeCharacter::ResetDamager(ASword* TargetSenser)
 
 void ALibertyPrimeCharacter::ResetDamager()
 {
-	bFocus = false;
-
 	for (auto ActiveSenser : ActiveSensers)
 	{
 		if (ActiveSenser)
@@ -640,12 +637,12 @@ bool ALibertyPrimeCharacter::CheckRestriction()
 	}
 }
 
-void ALibertyPrimeCharacter::Freeze(int Count, float Multiplier)
+void ALibertyPrimeCharacter::Freeze(float Multiplier)
 {
 	FireReset();
 	FireLine.Reverse();
 	IceLine.Play();
-	FreezeTotal = Multiplier * FreezeResist_Frostbite;
+	FreezeTotal = Multiplier;
 	CheckDilation();
 	GetWorldTimerManager().ClearTimer(FreezeTimer);
 	GetWorldTimerManager().SetTimer(FreezeTimer, this, &ALibertyPrimeCharacter::FreezeReset, FreezeDuration, false);
@@ -661,7 +658,7 @@ void ALibertyPrimeCharacter::FreezeReset()
 void ALibertyPrimeCharacter::CheckDilation()
 {
 	float lerpSpeed = 0.01;
-	float TargetDilation = FreezeTotal + SpeedUpTotal + 1.0f;
+	float TargetDilation = SpeedUpTotal + 1.0f - FreezeTotal;
 
 	GetWorldTimerManager().ClearTimer(DilationTimer);
 
@@ -686,7 +683,7 @@ void ALibertyPrimeCharacter::Fire(int Count, float DmgVal)
 	GetWorldTimerManager().ClearTimer(FreezeTimer);
 
 	FireLine.Play();
-	DMGOverTime_Fire = DmgVal;
+	DMGOverTime_Fire = DmgVal / 2.0f / (float)Count;
 	FireCount = Count;
 	FireCount_Current = 0;
 	GetWorldTimerManager().ClearTimer(FireTimer);
@@ -877,17 +874,42 @@ void ALibertyPrimeCharacter::ApplyElemental(ALibertyPrimeCharacter* Applier, EDa
 	switch (DMGType)
 	{
 	case EDamageType::Damage_Fire:
-		Fire(Applier->FireTick, Applier->FireDMG * FireResist_DMG);
+	{
+		Fire(Applier->FireTick, Calculate_Effect(Applier->FireDMG, FireResist_DMG));
 		break;
+	}
 	case EDamageType::Damage_Freeze:
-		Freeze(Applier->FreezeDuration, Applier->FreezeAmount);
+	{
+		Freeze(Calculate_Effect(Applier->FreezeAmount, FreezeResist_Frostbite));
 		break;
+	}
 	case EDamageType::Damage_Poison:
-		Poison(Applier->PoisonTick, Applier->PoisonDMG * PoisonResist_DMG);
+	{
+		Poison(Applier->PoisonTick, Calculate_Effect(Applier->PoisonDMG, PoisonResist_DMG));
 		break;
+	}
 	default:
 		break;
 	}
+}
+
+float ALibertyPrimeCharacter::Calculate_Effect(float effect_val, float resist_val)
+{
+	float target_val = 0.0f;
+
+	if (effect_val > 0.0f)
+	{
+		if (resist_val > 0.0f)
+		{
+			target_val = FMath::Clamp(effect_val - resist_val, 0.0f, effect_val);
+		}
+		else
+		{
+			target_val = effect_val;
+		}
+	}
+
+	return target_val;
 }
 
 void ALibertyPrimeCharacter::RandomAttack()
@@ -934,6 +956,12 @@ UAudioComponent* ALibertyPrimeCharacter::Play_SoundCue_Location(USoundCue* Targe
 		SoundComponent_Active = AudioComp_Local;
 	}
 
+	return AudioComp_Local;
+}
+
+UAudioComponent* ALibertyPrimeCharacter::Play_SoundCue_2D(USoundCue* TargetSoundCue, float volume)
+{
+	UAudioComponent* AudioComp_Local = UGameplayStatics::SpawnSound2D(GetWorld(), TargetSoundCue, volume);
 	return AudioComp_Local;
 }
 
