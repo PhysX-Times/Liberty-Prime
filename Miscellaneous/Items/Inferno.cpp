@@ -7,7 +7,9 @@
 UInferno::UInferno()
 {
 	Item_Name = "Inferno";
-	Item_Description = "Fire Damage: +5 \nFire Resistance: +3";
+	Item_Description = "+10.0 Fire Damage \n+5.0 Fire Resistance";
+
+	Item_Tier = 3;
 
 	static ConstructorHelpers::FObjectFinder<UTexture2D> IconObj(TEXT("Texture2D'/Game/UI/Icons/Iconset1/106.106'"));
 	Item_Icon = IconObj.Object;
@@ -15,12 +17,18 @@ UInferno::UInferno()
 
 void UInferno::Apply_Effect()
 {
-	MyOwner->FireDMG += 5.0f;
-	MyOwner->FireResist_DMG += 3.0f;
+	MyOwner->FireDMG += 10.0f;
+	MyOwner->FireDMG_Item += 10.0f;
+
+	MyOwner->FireResist_DMG += 5.0f;
+	MyOwner->FireResist_Item += 5.0f;
 }
 
 void UInferno::Reverse_Effect()
 {
-	MyOwner->FireDMG -= 5.0f;
-	MyOwner->FireResist_DMG -= 3.0f;
+	MyOwner->FireDMG -= 10.0f;
+	MyOwner->FireDMG_Item -= 10.0f;
+
+	MyOwner->FireResist_DMG -= 5.0f;
+	MyOwner->FireResist_Item -= 5.0f;
 }
