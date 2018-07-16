@@ -19,6 +19,7 @@
 #include "Weapon/Weapon.h"
 #include "Runtime/Engine/Classes/Components/SplineComponent.h"
 #include "Runtime/Landscape/Classes/Landscape.h"
+#include "Player/PlayerChar.h"
 #include "Miscellaneous/Item.h"
 #include "LibertyPrimePlayerController.h"
 #include "Engine.h"
@@ -44,6 +45,7 @@ ALibertyPrimeCharacter::ALibertyPrimeCharacter()
 	FreezeResist_Frostbite = 0.05f;
 	FreezeDuration = 5.0f;
 	LightningResist_DMG = 4.0f;
+	Lightning_Percentage = 15.0f;
 
 	FireTick = 4;
 	PoisonTick = 60;
@@ -233,14 +235,11 @@ void ALibertyPrimeCharacter::Damager(FDamageData DamageData, FVector PSLoc)
 		float dmg_multiplied = DamageData.Applier->DMG * DamageData.AttackData->DMGMultiplier;
 		float TargetDMG = Calculate_Effect(dmg_multiplied, PhysicalResist_DMG);
 
+		APlayerChar* IsPlayerChar = Cast<APlayerChar>(DamageData.Applier);
+
 		if (TargetDMG != 0.0f && PlayerController)
 		{
 			PlayerController->Add_Indicator(TargetDMG, PhysicalColor, PSLoc);
-		}
-
-		if (bIronWill)
-		{
-			TargetDMG /= 2.0f;
 		}
 
 		if (DamageData.DMGType == EDamageType::Damage_Fire)
@@ -257,13 +256,18 @@ void ALibertyPrimeCharacter::Damager(FDamageData DamageData, FVector PSLoc)
 		{
 			float LightningDMG_Local = Calculate_Effect(DamageData.Applier->LightningDMG, LightningResist_DMG);
 
-			DamageData.Applier->Damager_Simple(LightningDMG_Local / 100.0f * 15.0f, LightningColor);
+			DamageData.Applier->Damager_Simple(LightningDMG_Local / 100.0f * DamageData.Applier->Lightning_Percentage, LightningColor);
 			TargetDMG += LightningDMG_Local;
 
 			if (PlayerController)
 			{
 				PlayerController->Add_Indicator(LightningDMG_Local, LightningColor, PSLoc + FVector(0.0f, 0.0f, 47.5f));
 			}
+		}
+
+		if (IsPlayerChar && IsPlayerChar->Lifesteal_Rate > 0.0f)
+		{
+			IsPlayerChar->Lifesteal(TargetDMG / 100.0f * IsPlayerChar->Lifesteal_Rate);
 		}
 
 		Health = UKismetMathLibrary::FClamp(Health - TargetDMG, 0.0f, MaxHealth);
@@ -304,62 +308,37 @@ void ALibertyPrimeCharacter::Damager(FDamageData DamageData, FVector PSLoc)
 		{
 			if (!IsDead && CanBeHeavyHit)
 			{
-				if (montage_stop_cond != EICondition::Condition_Both && int(montage_stop_cond) != int(DamageData.AttackData->impact))
+				ResetDamager();
+				int rand = UKismetMathLibrary::RandomIntegerInRange(0, HeavyHitDatas.Num() - 1);
+				PlayMontage(HeavyHitDatas[rand].TargetMontage, HeavyHitDatas[rand].PlaySpeed, ERestriction::Restriction_Full, RotLerpSpeed);
+
+				if (CanHeavyHitRot)
 				{
-					ResetDamager();
-					int rand = UKismetMathLibrary::RandomIntegerInRange(0, HeavyHitDatas.Num() - 1);
-					GetWorld()->GetTimerManager().ClearTimer(DamagerTimer);
-					PlayMontage(HeavyHitDatas[rand].TargetMontage, HeavyHitDatas[rand].PlaySpeed, ERestriction::Restriction_Full, RotLerpSpeed);
-
-					if (CanHeavyHitRot)
-					{
-						FRotator NewRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), DamageData.Source->GetActorLocation());
-						SetActorRotation(FQuat(FRotator(0.0f, NewRot.Yaw, 0.0f)));
-					}
-
-					if (bHeavyRigidBody)
-					{
-						IsRigidBody = true;
-					}
-
-					if (bHeavyInvincible)
-					{
-						IsInvincible = true;
-					}
-
-					SoundActive_Destroy();
-					Play_SoundCue(SoundCue_GetHit, true);
+					FRotator NewRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), DamageData.Source->GetActorLocation());
+					SetActorRotation(FQuat(FRotator(0.0f, NewRot.Yaw, 0.0f)));
 				}
+
+				if (bHeavyRigidBody)
+				{
+					IsRigidBody = true;
+				}
+
+				if (bHeavyInvincible)
+				{
+					IsInvincible = true;
+				}
+
+				SoundActive_Destroy();
+				Play_SoundCue(SoundCue_GetHit, true);
 			}
 		}
 		else if (DamageData.AttackData->impact == EImpact::Impact_Normal)
 		{
 			if (!IsDead && CanBeNormalHit)
 			{
-				if (montage_stop_cond != EICondition::Condition_Both && int(montage_stop_cond) != int(DamageData.AttackData->impact))
-				{
-					ResetDamager();
-					int rand = FMath::RandRange(0, HitDatas.Num() - 1);
-					GetWorld()->GetTimerManager().ClearTimer(DamagerTimer);
-					PlayMontage(HitDatas[rand].TargetMontage, HitDatas[rand].PlaySpeed, ERestriction::Restriction_Full, RotLerpSpeed);
-
-					SoundActive_Destroy();
-					Play_SoundCue(SoundCue_GetHit, true);
-				}
-			}
-		}
-
-		if (!IsDead && montage_stop_cond != EICondition::Condition_None)
-		{
-			if (montage_stop_cond == EICondition::Condition_Both || int(montage_stop_cond) == int(DamageData.AttackData->impact))
-			{
 				ResetDamager();
-				GetCharacterMovement()->StopMovementImmediately();
-				GetMesh()->GetAnimInstance()->Montage_Stop(0.55f);
-				GetWorld()->GetTimerManager().ClearTimer(DamagerTimer);
-				GetWorld()->GetTimerManager().SetTimer(DamagerTimer, this, &ALibertyPrimeCharacter::ResetMontage, 0.77f, false);
-				restriction = ERestriction::Restriction_Full;
-				EndFly();
+				int rand = FMath::RandRange(0, HitDatas.Num() - 1);
+				PlayMontage(HitDatas[rand].TargetMontage, HitDatas[rand].PlaySpeed, ERestriction::Restriction_Full, RotLerpSpeed);
 
 				SoundActive_Destroy();
 				Play_SoundCue(SoundCue_GetHit, true);
@@ -1296,22 +1275,6 @@ void ALibertyPrimeCharacter::StartFly()
 void ALibertyPrimeCharacter::EndFly()
 {
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-}
-
-void ALibertyPrimeCharacter::IronWill_Start()
-{
-	bIronWill = true;
-	CanBeHeavyHit = false;
-	CanBeNormalHit = false;
-	FresnelLine.Play();
-}
-
-void ALibertyPrimeCharacter::IronWill_End()
-{
-	bIronWill = false;
-	CanBeHeavyHit = true;
-	CanBeNormalHit = true;
-	FresnelLine.Reverse();
 }
 
 void ALibertyPrimeCharacter::Build_Up()

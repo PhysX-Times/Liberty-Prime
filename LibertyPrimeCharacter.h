@@ -145,13 +145,12 @@ public:
 	EFaction faction;
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 	EICondition push_cond;
-	UPROPERTY(EditAnywhere, Category = "CppVariables")
-	EICondition montage_stop_cond;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 	EDamageType DMGType;
 
 	float Cap_Height;
 	float MoveTo_Distance_Add;
+	float Lightning_Percentage;
 
 	bool bBuildUp;
 	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
@@ -161,7 +160,6 @@ public:
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 	bool IsRigidBody;
 	bool bFocus;
-	bool bIronWill;
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 	bool CanBeHeavyHit;
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
@@ -262,7 +260,6 @@ public:
 
 	FRotator LerpRot;
 
-	FTimerHandle DamagerTimer;
 	FTimerHandle DamageOverTimer;
 	FTimerHandle FireTimer;
 	FTimerHandle FreezeTimer;
@@ -492,9 +489,6 @@ public:
 	virtual void ResetDamager_Add();
 
 	virtual void RotLerp(float DeltaTime);
-
-	virtual void IronWill_Start();
-	virtual void IronWill_End();
 
 	virtual void Build_Up();
 
