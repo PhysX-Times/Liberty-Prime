@@ -75,6 +75,10 @@ APlayerChar::APlayerChar()
 
 	slot_stages.Init(0, 9);
 	SlotItems.Init(nullptr, 9);
+
+	bCanUseDash = true;
+	bCanUseSpin = true;
+	bCanUseEnergy = true;
 }
 
 void APlayerChar::SetupPlayerInputComponent(class UInputComponent* InputComponent)
@@ -84,10 +88,12 @@ void APlayerChar::SetupPlayerInputComponent(class UInputComponent* InputComponen
 	InputComponent->BindAction("Attack", IE_Pressed, this, &APlayerChar::AttackFunction);
 	InputComponent->BindAction("Block", IE_Pressed, this, &APlayerChar::Block_Pressed);
 	InputComponent->BindAction("Block", IE_Released, this, &APlayerChar::Block_Released);
-	InputComponent->BindAction("Skill-1", IE_Pressed, this, &APlayerChar::DashAttack);
-	InputComponent->BindAction("Skill-2", IE_Pressed, this, &APlayerChar::SpinAttack);
-	InputComponent->BindAction("Skill-3", IE_Pressed, this, &APlayerChar::EnergyAttack);
+	InputComponent->BindAction("Skill-1", IE_Pressed, this, &APlayerChar::DashFunction);
+	InputComponent->BindAction("Skill-2", IE_Pressed, this, &APlayerChar::SpinFunction);
+	InputComponent->BindAction("Skill-3", IE_Pressed, this, &APlayerChar::EnergyFunction);
 	InputComponent->BindAction("Skill-4", IE_Pressed, this, &APlayerChar::IronWill_Apply);
+	InputComponent->BindAction("Health", IE_Pressed, this, &APlayerChar::Use_Heal_Potion);
+	InputComponent->BindAction("WillPower", IE_Pressed, this, &APlayerChar::Use_WillPower_Potion);
 
 	InputComponent->BindAction("Inventory", IE_Pressed, this, &APlayerChar::LoadInventory);
 
@@ -108,6 +114,105 @@ void APlayerChar::SetupPlayerInputComponent(class UInputComponent* InputComponen
 
 	InputComponent->BindAxis("MoveForward", this, &APlayerChar::MoveForward);
 	InputComponent->BindAxis("MoveRight", this, &APlayerChar::MoveRight);
+}
+
+void APlayerChar::Use_Heal_Potion()
+{
+	if (potion_heal_count > 0 && Health < MaxHealth)
+	{
+		Health = FMath::Clamp(Health + potion_heal_amount, 0.0f, MaxHealth);
+		UpdateHealth_PB();
+		potion_heal_count -= 1;
+		Update_PotionCount_Health();
+
+		UGameplayStatics::SpawnEmitterAttached(Health_PS, GetMesh());
+		Play_SoundCue_2D(SoundCue_HealthPotion);
+	}
+}
+
+void APlayerChar::Use_WillPower_Potion()
+{
+	if (potion_willpower_count > 0 && WillPower < MaxWillPower)
+	{
+		WillPower = FMath::Clamp(WillPower + potion_willpower_amount, 0.0f, MaxWillPower);
+		Update_WillPower();
+		potion_willpower_count -= 1;
+		Update_PotionCount_WillPower();
+
+		UGameplayStatics::SpawnEmitterAttached(WillPower_PS, GetMesh());
+		Play_SoundCue_2D(SoundCue_WillPowerPotion);
+	}
+}
+
+void APlayerChar::DashFunction()
+{
+	if (bCanUseDash && CheckRestriction())
+	{
+		if (Check_Use_WillPower(10.0f))
+		{
+			Dash_Call();
+			DashAttack();
+			bCanUseDash = false;
+			GetWorldTimerManager().SetTimer(DashTimer, this, &APlayerChar::Reset_Dash, 4.0f, false);
+		}
+	}
+}
+
+void APlayerChar::SpinFunction()
+{
+	if (bCanUseSpin && CheckRestriction())
+	{
+		if (Check_Use_WillPower(20.0f))
+		{
+			Spin_Call();
+			SpinAttack();
+			bCanUseSpin = false;
+			GetWorldTimerManager().SetTimer(SpinTimer, this, &APlayerChar::Reset_Spin, 7.0f, false);
+		}
+	}
+}
+
+void APlayerChar::EnergyFunction()
+{
+	if (bCanUseEnergy && CheckRestriction())
+	{
+		if (Check_Use_WillPower(15.0f))
+		{
+			Energy_Call();
+			EnergyAttack();
+			bCanUseEnergy = false;
+			GetWorldTimerManager().SetTimer(EnergyTimer, this, &APlayerChar::Reset_Energy, 8.5f, false);
+		}
+	}
+}
+
+void APlayerChar::Reset_Dash()
+{
+	bCanUseDash = true;
+}
+
+void APlayerChar::Reset_Spin()
+{
+	bCanUseSpin = true;
+}
+
+void APlayerChar::Reset_Energy()
+{
+	bCanUseEnergy = true;
+}
+
+bool APlayerChar::Check_Use_WillPower(float amount)
+{
+	if (WillPower > amount)
+	{
+		WillPower -= amount;
+		Update_WillPower();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 void APlayerChar::IronWill_Apply()
@@ -734,6 +839,11 @@ void APlayerChar::ChangeWidget(UUserWidget* NewWidget, bool remove)
 	CurrentWidget->AddToViewport();
 }
 
+void APlayerChar::Update_WillPower_Implementation()
+{
+
+}
+
 void APlayerChar::Widget_Load_Implementation()
 {
 
@@ -755,6 +865,31 @@ void APlayerChar::Swap_Child_Item_Implementation(int first_index, int second_ind
 }
 
 void APlayerChar::Remove_Child_Item_Implementation(int item_index, int count)
+{
+
+}
+
+void APlayerChar::Dash_Call_Implementation()
+{
+
+}
+
+void APlayerChar::Spin_Call_Implementation()
+{
+
+}
+
+void APlayerChar::Energy_Call_Implementation()
+{
+
+}
+
+void APlayerChar::Update_PotionCount_Health_Implementation()
+{
+
+}
+
+void APlayerChar::Update_PotionCount_WillPower_Implementation()
 {
 
 }

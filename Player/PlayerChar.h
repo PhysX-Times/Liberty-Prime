@@ -28,8 +28,30 @@ public:
 
 	APlayerChar();
 
+	bool bCanUseDash;
+	bool bCanUseSpin;
+	bool bCanUseEnergy;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CppVariables")
+		float potion_heal_amount;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CppVariables")
+		float potion_willpower_amount;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CppVariables")
+		int potion_heal_max;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CppVariables")
+		int potion_heal_count;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CppVariables")
+		int potion_willpower_max;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CppVariables")
+		int potion_willpower_count;
+
 	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
 		float MaxHealth_Item;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
+		float MaxWillPower;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
+		float WillPower;
 	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
 		float MaxWillPower_Item;
 	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
@@ -76,6 +98,9 @@ public:
 	FTimeline CounterLine;
 
 	FTimerHandle IronWillTimer;
+	FTimerHandle DashTimer;
+	FTimerHandle SpinTimer;
+	FTimerHandle EnergyTimer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UMG")
 	TSubclassOf<UUserWidget> InventoryWidget_Class;
@@ -117,6 +142,15 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "SoundCues")
 		USoundCue* SoundCue_Dodge;
+	UPROPERTY(EditAnywhere, Category = "SoundCues")
+		USoundCue* SoundCue_HealthPotion;
+	UPROPERTY(EditAnywhere, Category = "SoundCues")
+		USoundCue* SoundCue_WillPowerPotion;
+
+	UPROPERTY(EditAnywhere, Category = "Particles")
+		UParticleSystem* Health_PS;
+	UPROPERTY(EditAnywhere, Category = "Particles")
+		UParticleSystem* WillPower_PS;
 
 	UPROPERTY()
 		UAttackData* AttackData_const;
@@ -143,6 +177,31 @@ public:
 	void ApplyLightning();
 	void ApplyNone();
 
+	void DashFunction();
+	void SpinFunction();
+	void EnergyFunction();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
+		void Dash_Call();
+		void Dash_Call_Implementation();
+	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
+		void Spin_Call();
+		void Spin_Call_Implementation();
+	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
+		void Energy_Call();
+		void Energy_Call_Implementation();
+
+	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
+		void Use_Heal_Potion();
+	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
+		void Use_WillPower_Potion();
+
+	void Reset_Dash();
+	void Reset_Spin();
+	void Reset_Energy();
+
+	bool Check_Use_WillPower(float amount);
+
 	void Save();
 	void Load();
 
@@ -159,6 +218,17 @@ public:
 		void Equip_Swap_Item(int item_index, int slot_index);
 	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
 		void UnEquip_Item(int slot_index);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
+		void Update_PotionCount_Health();
+		void Update_PotionCount_Health_Implementation();
+	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
+		void Update_PotionCount_WillPower();
+		void Update_PotionCount_WillPower_Implementation();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
+		void Update_WillPower();
+		void Update_WillPower_Implementation();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
 		void Add_Child_Item(UItem* TargetItem, int target_index);
