@@ -25,6 +25,7 @@
 #include "Miscellaneous/Items/CernunnosBlessing.h"
 #include "Miscellaneous/Items/VenomBlade.h"
 #include "Miscellaneous/Items/VenomSerpent.h"
+#include "LibertyPrimePlayerController.h"
 
 APlayerChar::APlayerChar()
 {
@@ -76,6 +77,9 @@ APlayerChar::APlayerChar()
 	slot_stages.Init(0, 9);
 	SlotItems.Init(nullptr, 9);
 
+	WillPower_Rate = 1.0f;
+	Lifesteal_Rate = 0.0f;
+
 	bCanUseDash = true;
 	bCanUseSpin = true;
 	bCanUseEnergy = true;
@@ -91,7 +95,6 @@ void APlayerChar::SetupPlayerInputComponent(class UInputComponent* InputComponen
 	InputComponent->BindAction("Skill-1", IE_Pressed, this, &APlayerChar::DashFunction);
 	InputComponent->BindAction("Skill-2", IE_Pressed, this, &APlayerChar::SpinFunction);
 	InputComponent->BindAction("Skill-3", IE_Pressed, this, &APlayerChar::EnergyFunction);
-	InputComponent->BindAction("Skill-4", IE_Pressed, this, &APlayerChar::IronWill_Apply);
 	InputComponent->BindAction("Health", IE_Pressed, this, &APlayerChar::Use_Heal_Potion);
 	InputComponent->BindAction("WillPower", IE_Pressed, this, &APlayerChar::Use_WillPower_Potion);
 
@@ -207,20 +210,13 @@ bool APlayerChar::Check_Use_WillPower(float amount)
 	{
 		WillPower -= amount;
 		Update_WillPower();
+		GetWorldTimerManager().ClearTimer(WP_ReshreshTimer);
+		GetWorldTimerManager().SetTimer(WP_ReshreshTimer, this, &APlayerChar::WillPower_Refresh, 2.5f, false);
 		return true;
 	}
 	else
 	{
 		return false;
-	}
-}
-
-void APlayerChar::IronWill_Apply()
-{
-	if (CheckRestriction())
-	{
-		IronWill_Start();
-		GetWorldTimerManager().SetTimer(IronWillTimer, this, &ALibertyPrimeCharacter::IronWill_End, 10.0f, false);
 	}
 }
 
@@ -492,6 +488,27 @@ void APlayerChar::Add_Item(UItem* Item)
 		InventoryItems.Add(Item);
 		InventoryCounts.Add(1);
 		Add_Child_Item(Item, 0);
+	}
+}
+
+void APlayerChar::WillPower_Refresh()
+{
+	if (WillPower < MaxWillPower)
+	{
+		WillPower = FMath::Clamp(WillPower + (WillPower_Rate / 10.0f), 0.0f, MaxWillPower);
+		Update_WillPower();
+		GetWorldTimerManager().SetTimer(WP_ReshreshTimer, this, &APlayerChar::WillPower_Refresh, 0.1f, false);
+	}
+}
+
+void APlayerChar::Lifesteal(float value)
+{
+	UGameplayStatics::SpawnEmitterAttached(Lifesteal_PS, GetMesh());
+
+	if (Health < MaxHealth)
+	{
+		Health = FMath::Clamp(Health + value, 0.0f, MaxHealth);
+		UpdateHealth_PB();
 	}
 }
 
@@ -837,6 +854,150 @@ void APlayerChar::ChangeWidget(UUserWidget* NewWidget, bool remove)
 
 	CurrentWidget = NewWidget;
 	CurrentWidget->AddToViewport();
+}
+
+void APlayerChar::Damager(FDamageData DamageData, FVector PSLoc)
+{
+	if (!IsDead)
+	{
+		float dmg_multiplied = DamageData.Applier->DMG * DamageData.AttackData->DMGMultiplier;
+		float TargetDMG = Calculate_Effect(dmg_multiplied, PhysicalResist_DMG);
+
+		if (TargetDMG != 0.0f && PlayerController)
+		{
+			PlayerController->Add_Indicator(TargetDMG, PhysicalColor, PSLoc);
+		}
+
+		if (DamageData.DMGType == EDamageType::Damage_Fire)
+		{
+			float FireDMG_Local = Calculate_Effect(DamageData.Applier->FireDMG / 2.0f, FireResist_DMG / 2.0f);
+			TargetDMG += FireDMG_Local;
+
+			if (PlayerController)
+			{
+				PlayerController->Add_Indicator(FireDMG_Local, FireColor, PSLoc + FVector(0.0f, 0.0f, 47.5f));
+			}
+		}
+		else if (DamageData.DMGType == EDamageType::Damage_Lightning)
+		{
+			float LightningDMG_Local = Calculate_Effect(DamageData.Applier->LightningDMG, LightningResist_DMG);
+
+			DamageData.Applier->Damager_Simple(LightningDMG_Local / 100.0f * 15.0f, LightningColor);
+			TargetDMG += LightningDMG_Local;
+
+			if (PlayerController)
+			{
+				PlayerController->Add_Indicator(LightningDMG_Local, LightningColor, PSLoc + FVector(0.0f, 0.0f, 47.5f));
+			}
+		}
+
+		Health = UKismetMathLibrary::FClamp(Health - TargetDMG, 0.0f, MaxHealth);
+		UpdateHealth_PB();
+
+		if (Health <= 0.0f)
+		{
+			IsDead = true;
+		}
+
+		if (DamageData.AttackData->impact != EImpact::Impact_Light)
+		{
+			SpawnBloodDecal(DamageData.Source->GetActorLocation(), PSLoc);
+		}
+
+		FTransform HitPSTrans;
+		HitPSTrans.SetLocation(PSLoc);
+		HitPSTrans.SetScale3D(BloodSize_PS);
+		HitPSTrans.SetRotation(FQuat(FRotator(0.0f, 0.0f, 0.0f)));
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitPS, HitPSTrans, true);
+
+		switch (DamageData.WeaponType)
+		{
+		case EWeaponType::Weapon_Blunt:
+			Play_SoundCue(SoundCue_Hit_Blunt, false);
+			break;
+		case EWeaponType::Weapon_Sharp:
+			Play_SoundCue(SoundCue_Hit_Sharp, false);
+			break;
+		case EWeaponType::Weapon_Claw:
+			Play_SoundCue(SoundCue_Hit_Claw, false);
+			break;
+		default:
+			break;
+		}
+
+		if (DamageData.AttackData->impact == EImpact::Impact_Heavy)
+		{
+			if (!IsDead && CanBeHeavyHit)
+			{
+				ResetDamager();
+				int rand = UKismetMathLibrary::RandomIntegerInRange(0, HeavyHitDatas.Num() - 1);
+				PlayMontage(HeavyHitDatas[rand].TargetMontage, HeavyHitDatas[rand].PlaySpeed, ERestriction::Restriction_Full, RotLerpSpeed);
+
+				if (CanHeavyHitRot)
+				{
+					FRotator NewRot = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), DamageData.Source->GetActorLocation());
+					SetActorRotation(FQuat(FRotator(0.0f, NewRot.Yaw, 0.0f)));
+				}
+
+				if (bHeavyRigidBody)
+				{
+					IsRigidBody = true;
+				}
+
+				if (bHeavyInvincible)
+				{
+					IsInvincible = true;
+				}
+
+				SoundActive_Destroy();
+				Play_SoundCue(SoundCue_GetHit, true);
+			}
+		}
+		else if (DamageData.AttackData->impact == EImpact::Impact_Normal)
+		{
+			if (!IsDead && CanBeNormalHit)
+			{
+				ResetDamager();
+				int rand = FMath::RandRange(0, HitDatas.Num() - 1);
+				PlayMontage(HitDatas[rand].TargetMontage, HitDatas[rand].PlaySpeed, ERestriction::Restriction_Full, RotLerpSpeed);
+
+				SoundActive_Destroy();
+				Play_SoundCue(SoundCue_GetHit, true);
+			}
+		}
+
+		if (push_cond != EICondition::Condition_None)
+		{
+			if (push_cond == EICondition::Condition_Both || int(push_cond) == int(DamageData.AttackData->impact))
+			{
+				FVector SourceLoc = DamageData.Source->GetActorLocation();
+				FVector PushNormal = (GetActorLocation() - FVector(SourceLoc.X, SourceLoc.Y, GetActorLocation().Z)).GetSafeNormal();
+				FVector TraceStart = GetActorLocation();
+				FVector TraceEnd = TraceStart + (PushNormal * Weight);
+				FHitResult HitOut;
+				FCollisionQueryParams QueryParams;
+				QueryParams.AddIgnoredActor(this);
+
+				GetWorld()->LineTraceSingleByChannel(HitOut, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, QueryParams);
+
+				if (HitOut.bBlockingHit)
+				{
+					TraceEnd = HitOut.ImpactPoint + HitOut.ImpactNormal * 77.5f;
+				}
+
+				FLatentActionInfo LatentInfo;
+				LatentInfo.CallbackTarget = this;
+				UKismetSystemLibrary::MoveComponentTo(RootComponent, TraceEnd, GetActorRotation(), false, false, 0.22f, false, EMoveComponentAction::Type::Move, LatentInfo);
+			}
+		}
+
+		if (IsDead)
+		{
+			Die();
+		}
+
+		ApplyElemental(DamageData.Applier, DamageData.DMGType);
+	}
 }
 
 void APlayerChar::Update_WillPower_Implementation()

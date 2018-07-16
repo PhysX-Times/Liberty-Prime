@@ -32,6 +32,9 @@ public:
 	bool bCanUseSpin;
 	bool bCanUseEnergy;
 
+	float Lifesteal_Rate;
+	float WillPower_Rate;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CppVariables")
 		float potion_heal_amount;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CppVariables")
@@ -97,10 +100,10 @@ public:
 
 	FTimeline CounterLine;
 
-	FTimerHandle IronWillTimer;
 	FTimerHandle DashTimer;
 	FTimerHandle SpinTimer;
 	FTimerHandle EnergyTimer;
+	FTimerHandle WP_ReshreshTimer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UMG")
 	TSubclassOf<UUserWidget> InventoryWidget_Class;
@@ -151,6 +154,8 @@ public:
 		UParticleSystem* Health_PS;
 	UPROPERTY(EditAnywhere, Category = "Particles")
 		UParticleSystem* WillPower_PS;
+	UPROPERTY(EditAnywhere, Category = "Particles")
+		UParticleSystem* Lifesteal_PS;
 
 	UPROPERTY()
 		UAttackData* AttackData_const;
@@ -169,7 +174,7 @@ public:
 	void RotLerp(float DeltaTime) override;
 	void Die_Add() override;
 
-	void IronWill_Apply();
+	void Damager(FDamageData DamageData, FVector PSLoc) override;
 
 	void ApplyFire();
 	void ApplyIce();
@@ -180,6 +185,8 @@ public:
 	void DashFunction();
 	void SpinFunction();
 	void EnergyFunction();
+
+	void WillPower_Refresh();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "CppFunctions")
 		void Dash_Call();
@@ -201,6 +208,8 @@ public:
 	void Reset_Energy();
 
 	bool Check_Use_WillPower(float amount);
+
+	void Lifesteal(float value);
 
 	void Save();
 	void Load();
