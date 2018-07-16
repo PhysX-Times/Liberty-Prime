@@ -186,10 +186,6 @@ public:
 	float MaxHealth;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
 	float Health;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
-		float MaxWillPower;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
-		float WillPower;
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 	float FootstepVolume;
 	float RotLerpSpeed;
