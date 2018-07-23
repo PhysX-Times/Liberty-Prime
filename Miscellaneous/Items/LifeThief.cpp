@@ -20,16 +20,12 @@ void ULifeThief::Apply_Effect()
 {
 	MyOwner->Lifesteal_Rate += 20.0f;
 
-	MyOwner->MaxHealth -= 50.0f;
-	MyOwner->MaxHealth_Item -= 50.0f;
-	MyOwner->Health -= 50.0f;
+	MyOwner->Update_Health_Ratio(-40.0f);
 }
 
 void ULifeThief::Reverse_Effect()
 {
 	MyOwner->Lifesteal_Rate -= 20.0f;
 
-	MyOwner->MaxHealth += 50.0f;
-	MyOwner->MaxHealth_Item += 50.0f;
-	MyOwner->Health += 50.0f;
+	MyOwner->Update_Health_Ratio(40.0f);
 }

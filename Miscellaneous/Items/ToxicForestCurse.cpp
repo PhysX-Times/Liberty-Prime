@@ -25,9 +25,7 @@ void UToxicForestCurse::Apply_Effect()
 	MyOwner->PoisonResist_DMG += 1.0f;
 	MyOwner->PoisonResist_Item += 1.0f;
 
-	MyOwner->MaxHealth -= 100.0f;
-	MyOwner->MaxHealth_Item -= 100.0f;
-	MyOwner->Health -= 100.0f;
+	MyOwner->Update_Health_Ratio(-100.0f);
 }
 
 void UToxicForestCurse::Reverse_Effect()
@@ -38,7 +36,5 @@ void UToxicForestCurse::Reverse_Effect()
 	MyOwner->PoisonResist_DMG -= 1.0f;
 	MyOwner->PoisonResist_Item -= 1.0f;
 
-	MyOwner->MaxHealth += 100.0f;
-	MyOwner->MaxHealth_Item += 100.0f;
-	MyOwner->Health += 100.0f;
+	MyOwner->Update_Health_Ratio(100.0f);
 }

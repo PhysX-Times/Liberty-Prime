@@ -17,34 +17,26 @@ UMysticPhantom::UMysticPhantom()
 
 void UMysticPhantom::Apply_Effect()
 {
-	MyOwner->MaxWillPower += 25.0f;
-	MyOwner->MaxWillPower_Item += 25.0f;
-	MyOwner->WillPower += 25.0f;
+	MyOwner->Update_WillPower_Ratio(25.0f);
 
-	MyOwner->MaxHealth += 10.0f;
-	MyOwner->MaxHealth_Item += 10.0f;
-	MyOwner->Health += 10.0f;
+	MyOwner->Update_Health_Ratio(25.0f);
 
 	MyOwner->PoisonResist_DMG += 0.2f;
 	MyOwner->PoisonResist_Item += 0.2f;
 
-	MyOwner->PhysicalResist_DMG += 2.0f;
-	MyOwner->PhysicalResist_Item += 2.0f;
+	MyOwner->PhysicalResist_DMG += 5.0f;
+	MyOwner->PhysicalResist_Item += 5.0f;
 }
 
 void UMysticPhantom::Reverse_Effect()
 {
-	MyOwner->MaxWillPower -= 25.0f;
-	MyOwner->MaxWillPower_Item -= 25.0f;
-	MyOwner->WillPower -= 25.0f;
+	MyOwner->Update_WillPower_Ratio(-25.0f);
 
-	MyOwner->MaxHealth -= 10.0f;
-	MyOwner->MaxHealth_Item -= 10.0f;
-	MyOwner->Health -= 10.0f;
+	MyOwner->Update_Health_Ratio(-25.0f);
 
 	MyOwner->PoisonResist_DMG -= 0.2f;
 	MyOwner->PoisonResist_Item -= 0.2f;
 
-	MyOwner->PhysicalResist_DMG -= 2.0f;
-	MyOwner->PhysicalResist_Item -= 2.0f;
+	MyOwner->PhysicalResist_DMG -= 5.0f;
+	MyOwner->PhysicalResist_Item -= 5.0f;
 }

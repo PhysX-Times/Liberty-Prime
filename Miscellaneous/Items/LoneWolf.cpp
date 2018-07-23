@@ -19,9 +19,7 @@ void ULoneWolf::Apply_Effect()
 {
 	MyOwner->WillPower_Rate += 0.2f;
 
-	MyOwner->MaxWillPower += 50.0f;
-	MyOwner->MaxWillPower_Item += 50.0f;
-	MyOwner->WillPower += 50.0f;
+	MyOwner->Update_WillPower_Ratio(50.0f);
 
 }
 
@@ -29,7 +27,5 @@ void ULoneWolf::Reverse_Effect()
 {
 	MyOwner->WillPower_Rate -= 0.2f;
 
-	MyOwner->MaxWillPower -= 50.0f;
-	MyOwner->MaxWillPower_Item -= 50.0f;
-	MyOwner->WillPower -= 50.0f;
+	MyOwner->Update_WillPower_Ratio(-50.0f);
 }

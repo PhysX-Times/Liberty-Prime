@@ -20,16 +20,16 @@ void UMysticCreature::Apply_Effect()
 {
 	MyOwner->WillPower_Rate += 1.0f;
 
-	MyOwner->MaxHealth -= 25.0f;
-	MyOwner->MaxHealth_Item -= 25.0f;
-	MyOwner->Health -= 25.0f;
+	MyOwner->Update_WillPower_Ratio(10.0f);
+
+	MyOwner->Update_Health_Ratio(-25.0f);
 }
 
 void UMysticCreature::Reverse_Effect()
 {
 	MyOwner->WillPower_Rate -= 1.0f;
 
-	MyOwner->MaxHealth += 25.0f;
-	MyOwner->MaxHealth_Item += 25.0f;
-	MyOwner->Health += 25.0f;
+	MyOwner->Update_WillPower_Ratio(-10.0f);
+
+	MyOwner->Update_Health_Ratio(25.0f);
 }

@@ -23,9 +23,7 @@ void UIceSeal::Apply_Effect()
 	MyOwner->FreezeResist_Frostbite += 0.01f;
 	MyOwner->FrostbiteResist_Item += 0.01f;
 
-	MyOwner->MaxWillPower -= 15.0f;
-	MyOwner->MaxWillPower_Item -= 15.0f;
-	MyOwner->WillPower -= 15.0f;
+	MyOwner->Update_WillPower_Ratio(-15.0f);
 }
 
 void UIceSeal::Reverse_Effect()
@@ -35,7 +33,5 @@ void UIceSeal::Reverse_Effect()
 	MyOwner->FreezeResist_Frostbite -= 0.01f;
 	MyOwner->FrostbiteResist_Item -= 0.01f;
 
-	MyOwner->MaxWillPower += 15.0f;
-	MyOwner->MaxWillPower_Item += 15.0f;
-	MyOwner->WillPower += 15.0f;
+	MyOwner->Update_WillPower_Ratio(15.0f);
 }

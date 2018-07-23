@@ -18,9 +18,7 @@ UPlagueHeart::UPlagueHeart()
 
 void UPlagueHeart::Apply_Effect()
 {
-	MyOwner->MaxHealth += 50.0f;
-	MyOwner->MaxHealth_Item += 50.0f;
-	MyOwner->Health += 50.0f;
+	MyOwner->Update_Health_Ratio(50.0f);
 
 	MyOwner->PoisonResist_DMG += 0.2f;
 	MyOwner->PoisonResist_Item += 0.2f;
@@ -31,9 +29,7 @@ void UPlagueHeart::Apply_Effect()
 
 void UPlagueHeart::Reverse_Effect()
 {
-	MyOwner->MaxHealth -= 50.0f;
-	MyOwner->MaxHealth_Item -= 50.0f;
-	MyOwner->Health -= 50.0f;
+	MyOwner->Update_Health_Ratio(-50.0f);
 
 	MyOwner->PoisonResist_DMG -= 0.2f;
 	MyOwner->PoisonResist_Item -= 0.2f;

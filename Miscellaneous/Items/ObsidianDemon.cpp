@@ -18,9 +18,7 @@ UObsidianDemon::UObsidianDemon()
 
 void UObsidianDemon::Apply_Effect()
 {
-	MyOwner->MaxHealth += 50.0f;
-	MyOwner->MaxHealth_Item += 50.0f;
-	MyOwner->Health += 50.0f;
+	MyOwner->Update_Health_Ratio(50.0f);
 
 	MyOwner->DMG += 5.0f;
 	MyOwner->DMG_Item += 5.0f;
@@ -34,9 +32,7 @@ void UObsidianDemon::Apply_Effect()
 
 void UObsidianDemon::Reverse_Effect()
 {
-	MyOwner->MaxHealth -= 50.0f;
-	MyOwner->MaxHealth_Item -= 50.0f;
-	MyOwner->Health -= 50.0f;
+	MyOwner->Update_Health_Ratio(-50.0f);
 
 	MyOwner->DMG -= 5.0f;
 	MyOwner->DMG_Item -= 5.0f;

@@ -24,9 +24,7 @@ void UTormentedSoul::Apply_Effect()
 	MyOwner->FireResist_DMG += 10.0f;
 	MyOwner->FireResist_Item += 10.0f;
 
-	MyOwner->MaxWillPower -= 20.0f;
-	MyOwner->MaxWillPower_Item -= 20.0f;
-	MyOwner->WillPower -= 20.0f;
+	MyOwner->Update_WillPower_Ratio(-20.0f);
 }
 
 void UTormentedSoul::Reverse_Effect()
@@ -37,7 +35,5 @@ void UTormentedSoul::Reverse_Effect()
 	MyOwner->FireResist_DMG -= 10.0f;
 	MyOwner->FireResist_Item -= 10.0f;
 
-	MyOwner->MaxWillPower += 20.0f;
-	MyOwner->MaxWillPower_Item += 20.0f;
-	MyOwner->WillPower += 20.0f;
+	MyOwner->Update_WillPower_Ratio(20.0f);
 }
