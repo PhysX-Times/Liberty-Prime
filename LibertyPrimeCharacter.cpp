@@ -30,6 +30,7 @@ ALibertyPrimeCharacter::ALibertyPrimeCharacter()
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
 	IsDead = false;
+	bShield = false;
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	PrimaryActorTick.bCanEverTick = true;
@@ -78,7 +79,7 @@ ALibertyPrimeCharacter::ALibertyPrimeCharacter()
 	GetCapsuleComponent()->bGenerateOverlapEvents = false;
 
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 90.0f, 0.0f);
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 210.0f, 0.0f);
 
 	AgroCheckRadius = 1500.0f;
 }
@@ -268,6 +269,18 @@ void ALibertyPrimeCharacter::Damager(FDamageData DamageData, FVector PSLoc)
 		if (IsPlayerChar && IsPlayerChar->Lifesteal_Rate > 0.0f)
 		{
 			IsPlayerChar->Lifesteal(TargetDMG / 100.0f * IsPlayerChar->Lifesteal_Rate);
+		}
+
+		if (bShield)
+		{
+			FVector Offset = (GetActorLocation() - DamageData.Source->GetActorLocation()).GetSafeNormal();
+
+			float DotProduct = FVector::DotProduct(GetActorForwardVector(), Offset);
+
+			if (DotProduct >= 0.0f)
+			{
+				TargetDMG = TargetDMG * 0.7f;
+			}
 		}
 
 		Health = UKismetMathLibrary::FClamp(Health - TargetDMG, 0.0f, MaxHealth);
@@ -955,6 +968,16 @@ void ALibertyPrimeCharacter::SoundActive_Destroy()
 void ALibertyPrimeCharacter::UpdateHealth_PB_Implementation()
 {
 	
+}
+
+void ALibertyPrimeCharacter::HealthBar_Show_Implementation()
+{
+
+}
+
+void ALibertyPrimeCharacter::HealthBar_Hide_Implementation()
+{
+
 }
 
 void ALibertyPrimeCharacter::PoisonFunction(float Val)

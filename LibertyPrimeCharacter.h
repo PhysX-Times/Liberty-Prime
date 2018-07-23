@@ -152,6 +152,11 @@ public:
 	float MoveTo_Distance_Add;
 	float Lightning_Percentage;
 
+	float exp_multiplier;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CppVariables")
+		bool bShield;
+
 	bool bBuildUp;
 	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
 	bool IsBlocking;
@@ -240,7 +245,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "CppVariables")
 		int Critical_Chance;
 
-	int Level;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		int Level;
+	UPROPERTY(BlueprintReadWrite, Category = "CppVariables")
+		int Tier;
 
 	int DMGOverCount;
 	int DMGOverCount_Current;
@@ -423,7 +431,7 @@ public:
 
 	bool CheckRestriction();
 
-	void ApplyElemental(ALibertyPrimeCharacter* Applier, EDamageType DMGType);
+	virtual void ApplyElemental(ALibertyPrimeCharacter* Applier, EDamageType DMGType);
 
 	UFUNCTION()
 		void PoisonFunction(float Val);
@@ -463,6 +471,10 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, Category = "CppFunctions")
 		void UpdateHealth_PB();
+	UFUNCTION(BlueprintNativeEvent, Category = "CppFunctions")
+		void HealthBar_Show();
+	UFUNCTION(BlueprintNativeEvent, Category = "CppFunctions")
+		void HealthBar_Hide();
 
 	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
 		void ActiveSensers_Add(ASword* TargetSword);
