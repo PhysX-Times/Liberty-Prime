@@ -83,6 +83,11 @@ APlayerChar::APlayerChar()
 	bCanUseDash = true;
 	bCanUseSpin = true;
 	bCanUseEnergy = true;
+
+	bPoisonImmunity = false;
+	bShield = true;
+
+	shield_block_plus = 0.0f;
 }
 
 void APlayerChar::SetupPlayerInputComponent(class UInputComponent* InputComponent)
@@ -121,12 +126,14 @@ void APlayerChar::SetupPlayerInputComponent(class UInputComponent* InputComponen
 
 void APlayerChar::Use_Heal_Potion()
 {
-	if (potion_heal_count > 0 && Health < MaxHealth)
+	if (potion_heal_count > 0 && Health < MaxHealth && !IsDead)
 	{
 		Health = FMath::Clamp(Health + potion_heal_amount, 0.0f, MaxHealth);
 		UpdateHealth_PB();
 		potion_heal_count -= 1;
 		Update_PotionCount_Health();
+
+		Poison_Clear();
 
 		UGameplayStatics::SpawnEmitterAttached(Health_PS, GetMesh());
 		Play_SoundCue_2D(SoundCue_HealthPotion);
@@ -135,7 +142,7 @@ void APlayerChar::Use_Heal_Potion()
 
 void APlayerChar::Use_WillPower_Potion()
 {
-	if (potion_willpower_count > 0 && WillPower < MaxWillPower)
+	if (potion_willpower_count > 0 && WillPower < MaxWillPower && !IsDead)
 	{
 		WillPower = FMath::Clamp(WillPower + potion_willpower_amount, 0.0f, MaxWillPower);
 		Update_WillPower();
@@ -891,6 +898,19 @@ void APlayerChar::Damager(FDamageData DamageData, FVector PSLoc)
 			}
 		}
 
+		if (bShield)
+		{
+			FVector Offset = (GetActorLocation() - DamageData.Source->GetActorLocation()).GetSafeNormal();
+
+			float DotProduct = FVector::DotProduct(GetActorForwardVector(), Offset);
+
+			if (DotProduct >= 0.0f)
+			{
+				TargetDMG = TargetDMG * (0.7f - shield_block_plus);
+				GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, "Frontal Shield");
+			}
+		}
+
 		Health = UKismetMathLibrary::FClamp(Health - TargetDMG, 0.0f, MaxHealth);
 		UpdateHealth_PB();
 
@@ -998,6 +1018,53 @@ void APlayerChar::Damager(FDamageData DamageData, FVector PSLoc)
 
 		ApplyElemental(DamageData.Applier, DamageData.DMGType);
 	}
+}
+
+void APlayerChar::ApplyElemental(ALibertyPrimeCharacter* Applier, EDamageType DMGType)
+{
+	switch (DMGType)
+	{
+	case EDamageType::Damage_Fire:
+	{
+		Fire(Applier->FireTick, Calculate_Effect(Applier->FireDMG, FireResist_DMG));
+		break;
+	}
+	case EDamageType::Damage_Freeze:
+	{
+		Freeze(Calculate_Effect(Applier->FreezeAmount, FreezeResist_Frostbite));
+		break;
+	}
+	case EDamageType::Damage_Poison:
+	{
+		if (!bPoisonImmunity)
+		{
+			Poison(Applier->PoisonTick, Calculate_Effect(Applier->PoisonDMG, PoisonResist_DMG));
+			break;
+		}
+	}
+	default:
+		break;
+	}
+}
+
+void APlayerChar::Update_Health_Ratio(float value)
+{
+	float ratio = MaxHealth / Health;
+
+	MaxHealth += value;
+	MaxHealth_Item += value;
+
+	Health = MaxHealth / ratio;
+}
+
+void APlayerChar::Update_WillPower_Ratio(float value)
+{
+	float ratio = MaxWillPower / WillPower;
+
+	MaxWillPower += value;
+	MaxWillPower_Item += value;
+
+	WillPower = MaxWillPower / ratio;
 }
 
 void APlayerChar::Update_WillPower_Implementation()

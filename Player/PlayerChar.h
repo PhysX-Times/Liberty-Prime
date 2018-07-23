@@ -32,8 +32,12 @@ public:
 	bool bCanUseSpin;
 	bool bCanUseEnergy;
 
+	bool bPoisonImmunity;
+
 	float Lifesteal_Rate;
 	float WillPower_Rate;
+
+	float shield_block_plus;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "CppVariables")
 		float potion_heal_amount;
@@ -175,6 +179,7 @@ public:
 	void Die_Add() override;
 
 	void Damager(FDamageData DamageData, FVector PSLoc) override;
+	void ApplyElemental(ALibertyPrimeCharacter* Applier, EDamageType DMGType) override;
 
 	void ApplyFire();
 	void ApplyIce();
@@ -220,6 +225,9 @@ public:
 
 	void Add_Item(UItem* Item);
 	void Remove_Item(int item_index);
+
+	void Update_Health_Ratio(float value);
+	void Update_WillPower_Ratio(float value);
 
 	UFUNCTION(BlueprintCallable, Category = "CppFunctions")
 		void Equip_Item(int item_index, int slot_index);
