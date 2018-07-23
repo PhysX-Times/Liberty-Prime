@@ -7,7 +7,7 @@
 
 UFireWolf::UFireWolf()
 {
-	Item_Name = "Fury of The Fire Wolf";
+	Item_Name = "Wrath of The Fire Wolf";
 	Item_Description = "+12.0 Fire Damage \n+8.0 Fire Resistance";
 	Item_Description_Penalty = "-10.0 Health";
 	Item_Tier = 3;
@@ -24,9 +24,7 @@ void UFireWolf::Apply_Effect()
 	MyOwner->FireResist_DMG += 8.0f;
 	MyOwner->FireResist_Item += 8.0f;
 
-	MyOwner->MaxHealth -= 10.0f;
-	MyOwner->MaxHealth_Item -= 10.0f;
-	MyOwner->Health -= 10.0f;
+	MyOwner->Update_Health_Ratio(-10.0f);
 }
 
 void UFireWolf::Reverse_Effect()
@@ -37,7 +35,5 @@ void UFireWolf::Reverse_Effect()
 	MyOwner->FireResist_DMG -= 8.0f;
 	MyOwner->FireResist_Item -= 8.0f;
 
-	MyOwner->MaxHealth += 10.0f;
-	MyOwner->MaxHealth_Item += 10.0f;
-	MyOwner->Health += 10.0f;
+	MyOwner->Update_Health_Ratio(10.0f);
 }

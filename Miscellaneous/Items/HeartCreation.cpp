@@ -18,13 +18,9 @@ UHeartCreation::UHeartCreation()
 
 void UHeartCreation::Apply_Effect()
 {
-	MyOwner->MaxHealth += 100.0f;
-	MyOwner->MaxHealth_Item += 100.0f;
-	MyOwner->Health += 100.0f;
+	MyOwner->Update_Health_Ratio(100.0f);
 
-	MyOwner->MaxWillPower += 25.0f;
-	MyOwner->MaxWillPower_Item += 25.0f;
-	MyOwner->WillPower += 25.0f;
+	MyOwner->Update_WillPower_Ratio(25.0f);
 
 	MyOwner->DMG += 5.0f;
 	MyOwner->DMG_Item += 5.0f;
@@ -38,13 +34,9 @@ void UHeartCreation::Apply_Effect()
 
 void UHeartCreation::Reverse_Effect()
 {
-	MyOwner->MaxHealth -= 100.0f;
-	MyOwner->MaxHealth_Item -= 100.0f;
-	MyOwner->Health -= 100.0f;
+	MyOwner->Update_Health_Ratio(-100.0f);
 
-	MyOwner->MaxWillPower -= 25.0f;
-	MyOwner->MaxWillPower_Item -= 25.0f;
-	MyOwner->WillPower -= 25.0f;
+	MyOwner->Update_WillPower_Ratio(-25.0f);
 
 	MyOwner->DMG -= 5.0f;
 	MyOwner->DMG_Item -= 5.0f;

@@ -25,9 +25,7 @@ void UDiseasedPrayer::Apply_Effect()
 	MyOwner->DMG -= 2.0f;
 	MyOwner->DMG_Item -= 2.0f;
 
-	MyOwner->MaxHealth -= 20.0f;
-	MyOwner->Health -= 20.0f;
-	MyOwner->MaxHealth_Item -= 20.0f;
+	MyOwner->Update_Health_Ratio(-20.0f);
 }
 
 void UDiseasedPrayer::Reverse_Effect()
@@ -38,9 +36,5 @@ void UDiseasedPrayer::Reverse_Effect()
 	MyOwner->DMG += 2.0f;
 	MyOwner->DMG_Item += 2.0f;
 
-	MyOwner->MaxHealth += 20.0f;
-	MyOwner->MaxHealth += 20.0f;
-	MyOwner->MaxHealth_Item += 20.0f;
-
-	MyOwner->Health += 20.0f;
+	MyOwner->Update_Health_Ratio(20.0f);
 }

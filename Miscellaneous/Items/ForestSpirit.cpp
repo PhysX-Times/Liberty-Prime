@@ -18,22 +18,14 @@ UForestSpirit::UForestSpirit()
 
 void UForestSpirit::Apply_Effect()
 {
-	MyOwner->MaxWillPower += 120.0f;
-	MyOwner->MaxWillPower_Item += 120.0f;
-	MyOwner->WillPower += 120.0f;
+	MyOwner->Update_WillPower_Ratio(120.0f);
 
-	MyOwner->MaxHealth -= 30.0f;
-	MyOwner->MaxHealth_Item -= 30.0f;
-	MyOwner->Health -= 30.0f;
+	MyOwner->Update_WillPower_Ratio(-30.0f);
 }
 
 void UForestSpirit::Reverse_Effect()
 {
-	MyOwner->MaxWillPower -= 120.0f;
-	MyOwner->MaxWillPower_Item -= 120.0f;
-	MyOwner->WillPower -= 120.0f;
+	MyOwner->Update_WillPower_Ratio(-120.0f);
 
-	MyOwner->MaxHealth += 30.0f;
-	MyOwner->MaxHealth_Item += 30.0f;
-	MyOwner->Health += 30.0f;
+	MyOwner->Update_WillPower_Ratio(30.0f);
 }

@@ -18,9 +18,7 @@ UDemonRider::UDemonRider()
 
 void UDemonRider::Apply_Effect()
 {
-	MyOwner->MaxWillPower += 50.0f;
-	MyOwner->MaxWillPower_Item += 50.0f;
-	MyOwner->WillPower += 50.0f;
+	MyOwner->Update_WillPower_Ratio(50.0f);
 
 	MyOwner->FreezeAmount += 0.05f;
 	MyOwner->Frostbite_Item += 0.05f;
@@ -31,9 +29,7 @@ void UDemonRider::Apply_Effect()
 
 void UDemonRider::Reverse_Effect()
 {
-	MyOwner->MaxWillPower -= 50.0f;
-	MyOwner->MaxWillPower_Item -= 50.0f;
-	MyOwner->WillPower -= 50.0f;
+	MyOwner->Update_WillPower_Ratio(-50.0f);
 
 	MyOwner->FreezeAmount -= 0.05f;
 	MyOwner->Frostbite_Item -= 0.05f;

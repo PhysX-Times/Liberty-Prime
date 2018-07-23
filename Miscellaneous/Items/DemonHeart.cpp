@@ -18,22 +18,14 @@ UDemonHeart::UDemonHeart()
 
 void UDemonHeart::Apply_Effect()
 {
-	MyOwner->MaxHealth += 100.0f;
-	MyOwner->MaxHealth_Item += 100.0f;
-	MyOwner->Health += 100.0f;
+	MyOwner->Update_Health_Ratio(100.0f);
 
-	MyOwner->MaxWillPower -= 30.0f;
-	MyOwner->MaxWillPower_Item -= 30.0f;
-	MyOwner->WillPower -= 30.0f;
+	MyOwner->Update_WillPower_Ratio(-30.0f);
 }
 
 void UDemonHeart::Reverse_Effect()
 {
-	MyOwner->MaxHealth -= 100.0f;
-	MyOwner->MaxHealth_Item -= 100.0f;
-	MyOwner->Health -= 100.0f;
+	MyOwner->Update_Health_Ratio(-100.0f);
 
-	MyOwner->MaxWillPower += 30.0f;
-	MyOwner->MaxWillPower_Item += 30.0f;
-	MyOwner->WillPower += 30.0f;
+	MyOwner->Update_WillPower_Ratio(30.0f);
 }
